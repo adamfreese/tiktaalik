@@ -8,6 +8,7 @@ add_subdirectory(helpers)
 add_subdirectory(kernels)
 add_subdirectory(model)
 add_subdirectory(qcd)
+add_subdirectory(tests)
 
 set(tiktaalik_libs "tiktaalik")
 add_library(${tiktaalik_libs} SHARED ${sources})

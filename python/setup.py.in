@@ -40,6 +40,11 @@ ext_model = Extension(name = 'model_wrap',
         **kwargs
         )
 
+ext_model = Extension(name = 'testing_wrap',
+        sources = ['${CMAKE_CURRENT_SOURCE_DIR}/testing.f90'],
+        **kwargs
+        )
+
 ################################################################################
 # Installation
 
