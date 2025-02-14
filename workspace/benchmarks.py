@@ -12,7 +12,7 @@ mpl.rc('text.latex', preamble=r"\usepackage{bm,amsmath,amssymb,amsfonts,mathrsfs
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # The tests
 
-def shift_benchmark(key='NS', xi=0.5, nx=40, nlo=False, nstype=1):
+def shift_benchmark(key='NS', xi=0.5, nx=40, nlo=False, nstype=1, grid_type=1):
     # Define a ground truth function
     gt_fun = get_gt_fun(key=key, xi=xi, nlo=nlo, nstype=nstype)
     # Make the benchmark plot object
@@ -24,12 +24,12 @@ def shift_benchmark(key='NS', xi=0.5, nx=40, nlo=False, nstype=1):
             legend = True,
             filename = 'benchmark_' + key
             )
-    tk.matrices.initialize_kernels(nx, xi)
+    tk.matrices.initialize_kernels(nx, xi, grid_type=grid_type)
     K  = get_kernel(key=key, nstype=nstype, nlo=nlo)
-    x = tk.matrices.pixelspace(nx)
+    x = tk.matrices.pixelspace(nx, xi=xi, grid_type=grid_type)
     H0 = gpd_key(x, xi=xi, key=key)
     dH = np.einsum('ij,j->i', K[:,:,0], H0)
-    bm.plot_data(x, dH, label=r'$n_x={:d}$'.format(nx))
+    bm.plot_data(x, dH, label=r'tiktaalik')
     # Finish
     bm.finish()
     return
