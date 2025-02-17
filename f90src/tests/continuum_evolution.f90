@@ -6,7 +6,7 @@
 ! Created on May 24, 2024.
 
 module continuum_evolution
-  use integration,   only: integrate2
+  use integration,   only: adaptive_integrate
   use alpha_qcd,     only: get_alpha_QCD, get_neff
   use kernels_common
   use kvlo4tests
@@ -114,7 +114,7 @@ module continuum_evolution
         real(dp), intent(in) :: x, xi
         real(dp) :: shift
         !
-        shift = integrate2(integrand, x, xi)
+        shift = adaptive_integrate(integrand, x, xi)
         return
         contains
           function integrand(y) result(intd)
@@ -130,7 +130,7 @@ module continuum_evolution
         real(dp), intent(in) :: x, xi
         real(dp) :: shift
         !
-        shift = integrate2(integrand, x, xi)
+        shift = adaptive_integrate(integrand, x, xi)
         return
         contains
           function integrand(y) result(intd)

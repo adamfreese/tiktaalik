@@ -15,8 +15,7 @@
 ! It uses a fixed nfl=4.
 
 module kvlo4tests
-  use constants,      only: CF, CA, TF, pi
-  use integration,    only: integrate2
+  use constants, only: CF, CA, TF, pi
   use kernels_lo
   use kernels_nlo
 
