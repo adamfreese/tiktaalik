@@ -154,7 +154,7 @@ class bmplot:
         x3 = np.geomspace( self.xi,        1, 100)
         x = np.concatenate((x1[:99], x2[1:99], x3[1:]))
         H = self.gt_fun(x)
-        self.ax1.plot(x, H, '-', color='black', linewidth=2, label=r'Ground truth')
+        self.ax1.plot(x, H, '-', color='xkcd:lawn green', linewidth=2, label=r'Ground truth')
         return
 
     def plot_baselines(self):
@@ -196,9 +196,11 @@ class bmplot:
         #self.ax1.get_xaxis().set_visible(False)
         self.ax1.get_xaxis().set_ticklabels([])
         self.ax2.set_xlabel(r'$x$', fontsize=30)
-        if(self.ylabel is not None):
-            self.ax1.set_ylabel(self.ylabel, fontsize=30)
-            self.ax2.set_ylabel(r'error (\%)', fontsize=34)
+        #if(self.ylabel is not None):
+        #    self.ax1.set_ylabel(self.ylabel, fontsize=30)
+        #    self.ax2.set_ylabel(r'error (\%)', fontsize=34)
+        self.ax1.set_ylabel(r'Shift', fontsize=30)
+        self.ax2.set_ylabel(r'error (\%)', fontsize=34)
         if(self.axy is not None):
             self.ax1.annotate(self.title, xy=self.axy, xycoords="axes fraction",
                     bbox=dict(
@@ -229,8 +231,11 @@ class bmplot:
         # Temporary
         #self.ax1.set_xscale('symlog', linthresh=self.xi)
         #self.ax2.set_xscale('symlog', linthresh=self.xi)
+        # Permanent
+        self.ax1.set_xlim((-1,1))
+        self.ax2.set_xlim((-1,1))
         # the end
-        #self.fig.patch.set_alpha(0)
+        self.fig.patch.set_alpha(0)
         self.fig.savefig('derp.pdf')
         self.fig.savefig('derp.png')
         self.fig.savefig(self.filename+'.pdf')
