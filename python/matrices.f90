@@ -9,7 +9,6 @@ module dummy
   use gridspace
   use matevo
   use pixelation
-  use specfun ! TODO REMOVE BEFORE RELEASE
 
   implicit none
   public
@@ -74,13 +73,13 @@ module dummy
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! Evolution matrices
 
-    subroutine evomatrix_vns_wrap(nx, nxi, nQ2, M)
+    subroutine evomatrix_vns_wrap(nx, nxi, nQ2, nstype, M)
         ! QQ, helicity-independent
         integer,  parameter   :: dp = kind(1d0)
-        integer,  intent(in)  :: nx, nxi, nQ2
+        integer,  intent(in)  :: nx, nxi, nQ2, nstype
         real(dp), intent(out) :: M(nx,nx,nxi,nQ2)
         !
-        M = evomat_V_NS(nx, nxi, nQ2)
+        M = evomat_V_NS(nx, nxi, nQ2, nstype)
     end subroutine evomatrix_vns_wrap
 
     subroutine evomatrix_vsg_wrap(nx, nxi, nQ2, M)
@@ -92,13 +91,13 @@ module dummy
         M = evomat_V_SG(nx, nxi, nQ2)
     end subroutine evomatrix_vsg_wrap
 
-    subroutine evomatrix_ans_wrap(nx, nxi, nQ2, M)
+    subroutine evomatrix_ans_wrap(nx, nxi, nQ2, nstype, M)
         ! QQ, helicity-independent
         integer,  parameter   :: dp = kind(1d0)
-        integer,  intent(in)  :: nx, nxi, nQ2
+        integer,  intent(in)  :: nx, nxi, nQ2, nstype
         real(dp), intent(out) :: M(nx,nx,nxi,nQ2)
         !
-        M = evomat_A_NS(nx, nxi, nQ2)
+        M = evomat_A_NS(nx, nxi, nQ2, nstype)
     end subroutine evomatrix_ans_wrap
 
     subroutine evomatrix_asg_wrap(nx, nxi, nQ2, M)
@@ -192,20 +191,5 @@ module dummy
         !
         K = kernel_A_gg(Q2, nx, nxi, nfl, l_nlo)
     end subroutine evokernel_agg_wrap
-
-    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ! TESTING AREA (TODO REMOVE BEFORE RELEASE)
-
-    subroutine dilog_wrap(nx, x, y)
-        integer,  parameter   :: dp = kind(1d0)
-        integer,  intent(in)  :: nx
-        real(dp), intent(in)  :: x(nx)
-        real(dp), intent(out) :: y(nx)
-        !
-        integer :: i
-        do i=1, nx, 1
-          y(i) = dilog(x(i))
-        end do
-    end subroutine dilog_wrap
 
 end module dummy
