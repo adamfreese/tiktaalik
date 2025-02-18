@@ -12,9 +12,9 @@ mpl.rc('text.latex', preamble=r"\usepackage{bm,amsmath,amssymb,amsfonts,mathrsfs
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # The tests
 
-def shift_benchmark(key='NS', xi=0.5, nx=40, nlo=False, nstype=1, grid_type=1):
+def shift_benchmark(key='NS', xi=0.5, nx=40, nlo=False, ns_type=1, grid_type=1):
     # Define a ground truth function
-    gt_fun = get_gt_fun(key=key, xi=xi, nlo=nlo, nstype=nstype)
+    gt_fun = get_gt_fun(key=key, xi=xi, nlo=nlo, ns_type=ns_type)
     # Make the benchmark plot object
     bm = bmplot(
             gt_fun,
@@ -25,7 +25,7 @@ def shift_benchmark(key='NS', xi=0.5, nx=40, nlo=False, nstype=1, grid_type=1):
             filename = 'benchmark_' + key
             )
     tk.matrices.initialize_kernels(nx, xi, grid_type=grid_type)
-    K  = get_kernel(key=key, nstype=nstype, nlo=nlo)
+    K  = get_kernel(key=key, ns_type=ns_type, nlo=nlo)
     x = tk.matrices.pixelspace(nx, xi=xi, grid_type=grid_type)
     H0 = gpd_key(x, xi=xi, key=key)
     dH = np.einsum('ij,j->i', K[:,:,0], H0)
@@ -37,9 +37,9 @@ def shift_benchmark(key='NS', xi=0.5, nx=40, nlo=False, nstype=1, grid_type=1):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Auxiliary functions
 
-def get_gt_fun(key='NS', xi=0.5, Q2=tk.pars.mc2, nlo=False, nstype=1):
+def get_gt_fun(key='NS', xi=0.5, Q2=tk.pars.mc2, nlo=False, ns_type=1):
     def gt_fun_NS(x):
-        return tk.testing.test_shift_cNS(x, xi, Q2, nlo, nstype)[:,0]
+        return tk.testing.test_shift_cNS(x, xi, Q2, nlo, ns_type)[:,0]
     def gt_fun_QQ(x):
         return tk.testing.test_shift_cQQ(x, xi, Q2, nlo)[:,0]
     def gt_fun_QG(x):
@@ -62,11 +62,11 @@ def get_gt_fun(key='NS', xi=0.5, Q2=tk.pars.mc2, nlo=False, nstype=1):
         raise ValueError("Key "+key+" unrecognized.")
     return gt_fun
 
-def get_kernel(key='NS', nfl=4, nstype=1, nlo=False):
+def get_kernel(key='NS', nfl=4, ns_type=1, nlo=False):
     if(key=='NS'):
-        K = tk.matrices.kernel_VQQ(nfl=nfl, nlo=nlo, nstype=nstype)
+        K = tk.matrices.kernel_VQQ(nfl=nfl, nlo=nlo, ns_type=ns_type)
     elif(key=='qq'):
-        K = tk.matrices.kernel_VQQ(nfl=nfl, nlo=nlo, nstype=0)
+        K = tk.matrices.kernel_VQQ(nfl=nfl, nlo=nlo, ns_type=0)
     elif(key=='qg'):
         K = tk.matrices.kernel_VQG(nfl=nfl, nlo=nlo)
     elif(key=='gq'):
@@ -224,7 +224,7 @@ class bmplot:
                 loc = 4
             _ = self.ax1.legend(prop = { 'size' : 24 }, loc=loc)
             markersizes = [1, 12, 14, 12, 14]
-            for count, legend_handle in enumerate(self.ax1.get_legend().legend_handles):
+            for count, legend_handle in enumerate(self.ax1.get_legend().legendHandles):
                 legend_handle.set(markersize = markersizes[count])
         # Temporary
         #self.ax1.set_xscale('symlog', linthresh=self.xi)
