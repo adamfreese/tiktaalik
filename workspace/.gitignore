@@ -1,3 +1,4 @@
 *
 !.gitignore
 !benchmarks.py
+!small_xi_study.py

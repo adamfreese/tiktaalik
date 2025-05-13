@@ -10,7 +10,7 @@ works right.
 
 import numpy as np
 import pandas
-from testing_wrap import dummy as f90src
+from .f90wrap.testing import dummy as f90src
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Continuum shifts

@@ -225,12 +225,12 @@ class bmplot:
             if(self.xi<0.1):
                 loc = 4
             _ = self.ax1.legend(prop = { 'size' : 24 }, loc=loc)
-            markersizes = [1, 12, 14, 12, 14]
-            for count, legend_handle in enumerate(self.ax1.get_legend().legendHandles):
-                legend_handle.set(markersize = markersizes[count])
+            #markersizes = [1, 12, 14, 12, 14]
+            #for count, legend_handle in enumerate(self.ax1.get_legend().legendHandles):
+            #    legend_handle.set(markersize = markersizes[count])
         # Temporary
-        #self.ax1.set_xscale('symlog', linthresh=self.xi)
-        #self.ax2.set_xscale('symlog', linthresh=self.xi)
+        self.ax1.set_xscale('symlog', linthresh=self.xi)
+        self.ax2.set_xscale('symlog', linthresh=self.xi)
         # Permanent
         self.ax1.set_xlim((-1,1))
         self.ax2.set_xlim((-1,1))
