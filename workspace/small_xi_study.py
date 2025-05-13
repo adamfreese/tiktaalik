@@ -10,31 +10,40 @@ mpl.rc('text',usetex=True)
 mpl.rc('text.latex', preamble=r"\usepackage{bm,amsmath,amssymb,amsfonts,mathrsfs}")
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Global plot properties
+
+lins = ['-','--', '-.', ':']
+dots   = ['*', 'x', '+', '.']
+cols = ['xkcd:forest green', 'xkcd:rich purple', 'xkcd:ochre', 'xkcd:electric blue']
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Plot demos
 
-def plot_LO(nx=100, full_xi_list=False):
-    if(full_xi_list):
-        xi_array = np.linspace(0.5e-5, 5e-5, 10)
-    else:
-        xi_array = np.array([5e-6, 4e-5, 5e-5])
-    #
-    #
+def plot_multi_xi(xi_array=np.array([4e-3, 4e-4, 4e-5, 4e-6]), nx=100, nlo=False):
+    # Line and dot styles
+    N = xi_array.shape[0]
+    # Set up plot canvas
     nrows, ncols = 1, 1
     fig = py.figure(figsize=(ncols*8,nrows*6),layout='constrained')
     ax = py.subplot(nrows,ncols,1)
-    #
+    # Set up plot limits
     xmin = 1
     xmax = 1
     ymin = 1e-2
     ymax = ymin
-    #ymin = 0
-    for xi in xi_array:
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # The finite element stuff
+    for n in range(N):
+        # Compute things to be plotted
+        xi = xi_array[n]
         x = tk.matrices.pixelspace(nx, xi=xi, grid_type=2)
-        dH = get_xi_shift(xi, nx=nx, nlo=False)
-        ax.plot(x, dH, 'x', label=r'$\xi='+'{:.1f}'.format(xi*1e5)+r'\cdot10^{-5}$')
+        dH = get_xi_shift(xi, nx=nx, nlo=nlo)
+        ax.plot(x, dH, dots[n],
+                color=cols[n],
+                label=r'$\xi='+'{:.1e}$'.format(xi)
+                )
         # Update plot limits
         xmin = min(xmin, np.abs(x).min())
-        #ymin = min(ymin, np.abs(dH).min())
         ymax = max(ymax, np.abs(dH).max())
     ymax *= 1.1
     xmin /= 1.1
@@ -43,20 +52,39 @@ def plot_LO(nx=100, full_xi_list=False):
     ax.set_ylim((ymin, ymax))
     ax.set_xscale('log')
     ax.set_yscale('log')
-    #
+    # 
     ax.set_xlabel(r'$x$')
     ax.set_ylabel(r'Single shift')
-    _ = ax.legend(prop = { 'size' : 17 }, loc=3, ncol=2)
+    _ = ax.legend(prop = { 'size' : 17 }, loc=1)
+    # Vertical line test
+    if(nlo):
+        ymin, ymax = ax.get_ylim()
+        ax.vlines(2e-3, ymin, ymax, color='tab:gray', linewidth=1)
+        ax.set_ylim((ymin,ymax))
+    # Save
     fig.savefig('derp.pdf')
-    fig.savefig('small_xi_LO_tk.pdf')
-    fig.savefig('small_xi_LO_tk.png')
+    if(nlo):
+        fig.savefig('small_xi_NLO_tk.pdf')
+        fig.savefig('small_xi_NLO_tk.png')
+    else:
+        fig.savefig('small_xi_LO_tk.pdf')
+        fig.savefig('small_xi_LO_tk.png')
     # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     # Now add in continuum stuff
-    x = np.geomspace(xmin, xmax/1.1, 20)
-    for xi in xi_array:
-        dH = get_continuum_shift(x, xi, nlo=False)
-        ax.plot(x, dH, '--')
+    x = np.geomspace(xmin, xmax/1.1, 666)
+    for n in range(N):
+        xi = xi_array[n]
+        dH = get_continuum_shift(x, xi, nlo=nlo)
+        ax.plot(x, dH, lins[n],
+                color=cols[n],
+                )
     fig.savefig('derp.pdf')
+    if(nlo):
+        fig.savefig('small_xi_NLO_ct.pdf')
+        fig.savefig('small_xi_NLO_ct.png')
+    else:
+        fig.savefig('small_xi_LO_ct.pdf')
+        fig.savefig('small_xi_LO_ct.png')
     return
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
