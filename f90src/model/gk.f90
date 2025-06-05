@@ -134,14 +134,21 @@ module gk
         real(dp) :: H
         !
         real(dp) :: zi, zf
+        real(dp), parameter :: fakexi = 5e-5_dp
         H = 0.0_dp
         zi = (x-xi)/(1.-xi)
         zf = (x+xi)/(1.+xi)
-        if(x > xi) then
+        if(x > 3.*fakexi .and. xi < fakexi .and. x > 17.*xi) then
+          zi = (x-fakexi)/(1.-fakexi)
+          zf = (x+fakexi)/(1.+fakexi)
+          H = H_n1_term(x, fakexi, t, zf, i) - H_n1_term(x, fakexi, t, zi, i)
+          H = H * (xi/fakexi)**3
+        elseif(x > xi) then
           H = H_n1_term(x, xi, t, zf, i) - H_n1_term(x, xi, t, zi, i)
         elseif( x > -xi) then
           H = H_n1_term(x, xi, t, zf, i)
         endif
+        H = H / xi**3
     end function H_n1
 
     function H_n2(x, xi, t, i, sgn) result(H)
@@ -150,18 +157,33 @@ module gk
         real(dp) :: H
         !
         real(dp) :: zi, zf, zm, zj
+        real(dp), parameter :: fakexi = 3e-3_dp
         H = 0.0_dp
         zi = (x-xi)/(1.-xi)
         zf = (x+xi)/(1.+xi)
         zj = (-x-xi)/(1.-xi)
         zm = (-x+xi)/(1.+xi)
-        if(x > xi) then
+        if(x > 3.*fakexi .and. xi < fakexi .and. x > 17.*xi) then
+          zi = (x-fakexi)/(1.-fakexi)
+          zf = (x+fakexi)/(1.+fakexi)
+          H = H_n2_term(x, fakexi, t, zf, i) - H_n2_term(x, fakexi, t, zi, i)
+          H = H * (xi/fakexi)**5
+          if(H.ne.H .or. H==(H+1.)) then
+            print *, x, xi, zi, zf
+          endif
+        elseif(x < -3.*fakexi .and. xi < fakexi .and. x < -17.*xi) then
+          zj = (-x-fakexi)/(1.-fakexi)
+          zm = (-x+fakexi)/(1.+fakexi)
+          H = sgn*(H_n2_term(-x, fakexi, t, zm, i) - H_n2_term(-x, fakexi, t, zj, i))
+          H = H * (xi/fakexi)**5
+        elseif(x > xi) then
           H = H_n2_term(x, xi, t, zf, i) - H_n2_term(x, xi, t, zi, i)
         elseif( x > -xi) then
           H = H_n2_term(x, xi, t, zf, i) + sgn*H_n2_term(-x, xi, t, zm, i)
         else
           H = sgn*(H_n2_term(-x, xi, t, zm, i) - H_n2_term(-x, xi, t, zj, i))
         endif
+        H = H / xi**5
     end function H_n2
 
     function H_n1_term(x, xi, t, z, i) result(H)
@@ -176,7 +198,8 @@ module gk
             H = H + C(i,j)*kw(x, xi, w)*z**pw(i, j, w, t) / pw(i, j, w, t)
           end do
         end do
-        H = H * 0.75/xi
+        H = H * 0.75
+        ! missing xi**-3
     end function H_n1_term
 
     function H_n2_term(x, xi, t, z, i) result(H)
@@ -191,7 +214,8 @@ module gk
             H = H + C(i,j)*ew(x, xi, w)*z**pw(i, j, w, t) / pw(i, j, w, t)
           end do
         end do
-        H = H * 1.875/xi/2.
+        H = H * 1.875/2.
+        ! Missing xi**-5
     end function H_n2_term
 
     function kw(x, xi, w) result(kappa)
@@ -201,11 +225,11 @@ module gk
         !
         select case(w)
         case(1)
-          kappa = 1. - x**2/xi**2
+          kappa = xi**2 - x**2
         case(2)
-          kappa = 2.*(x/xi**2-1.)
+          kappa = 2.*(x-xi**2)
         case(3)
-          kappa = 1. - 1./xi**2
+          kappa = xi**2 - 1.
         case default
           kappa = 0.0_dp
         end select
