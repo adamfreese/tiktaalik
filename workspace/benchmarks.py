@@ -16,12 +16,20 @@ def shift_benchmark(key='NS', xi=0.5, nx=40, nlo=False, ns_type=1, grid_type=1):
     # Define a ground truth function
     gt_fun = get_gt_fun(key=key, xi=xi, nlo=nlo, ns_type=ns_type)
     # Make the benchmark plot object
+    symlog = False
+    inlay = False
+    if(grid_type==2):
+        symlog = True
+    if(grid_type==2 and key=='qq' and xi==1e-4):
+        inlay = True
     bm = bmplot(
             gt_fun,
             xi=xi,
             title = r'\textbf{'+key+r'}',
             ylabel = None,
             legend = True,
+            symlog = symlog,
+            inlay  = inlay,
             filename = 'benchmark_' + key
             )
     tk.matrices.initialize_kernels(nx, xi, grid_type=grid_type)
@@ -116,7 +124,8 @@ class bmplot:
             gt_fun, xi=0.5, title=None, ylabel=None, legend=False,
             axy=((0.04,0.04)),
             axy2=((0.04,0.92)),
-            key = None, showkey = False,
+            key = None, showkey = False, symlog = False,
+            inlay = False,
             filename='derp'):
         nrows,ncols=2,1
         self.fig, (self.ax1, self.ax2) = py.subplots(
@@ -126,6 +135,9 @@ class bmplot:
                 layout = 'constrained'
                 )
         self.gt_fun = gt_fun
+        self.inlay = inlay
+        if(self.inlay):
+            self.ax1b = self.ax1.inset_axes([0.69,0.69,0.28,0.28])
         #
         self.n = 0
         self.xi = xi
@@ -137,9 +149,10 @@ class bmplot:
         self.axy2 = axy2
         self.key = key
         self.showkey = showkey
+        self.symlog = symlog
         #
-        self.color = ('xkcd:rich purple', 'xkcd:forest green', 'mediumblue', 'tab:orange')
-        self.fmt   = ('x', '+', '.', 's')
+        self.color = ('xkcd:rich purple', 'xkcd:ochre', 'xkcd:electric blue', 'xkcd:vermillion')
+        self.fmt   = ('*', 'x', '+', '.')
         self.size  = (6, 8, 8, 6)
         #
         self.plot_baselines()
@@ -147,14 +160,16 @@ class bmplot:
         return
 
     def plot_gt(self):
-        #x = np.linspace(-1, 1, 666)
-        # TEMPORARY
-        x1 = np.geomspace(      -1, -self.xi, 100)
-        x2 = np.linspace( -self.xi,  self.xi, 100)
-        x3 = np.geomspace( self.xi,        1, 100)
-        x = np.concatenate((x1[:99], x2[1:99], x3[1:]))
+        # Hmm
+        N = 60
+        x1 = np.geomspace(      -1, -self.xi, N)
+        x2 = np.linspace( -self.xi,  self.xi, N)
+        x3 = np.geomspace( self.xi,        1, N)
+        x = np.concatenate((x1[:N-1], x2[1:N-1], x3[1:]))
         H = self.gt_fun(x)
-        self.ax1.plot(x, H, '-', color='xkcd:lawn green', linewidth=2, label=r'Ground truth')
+        self.ax1.plot(x, H, '-', color='xkcd:forest green', linewidth=2, label=r'Ground truth')
+        if(self.inlay):
+            self.ax1b.plot(x, H, '-', color='xkcd:forest green', linewidth=2)
         return
 
     def plot_baselines(self):
@@ -163,6 +178,8 @@ class bmplot:
         one  = zero + 1
         self.ax1.plot(x, zero, '-', color='tab:gray', linewidth=1)
         self.ax2.plot(x, one,  '-', color='tab:gray', linewidth=1)
+        if(self.inlay):
+            self.ax1b.plot(x, zero, '-', color='tab:gray', linewidth=1)
         return
 
     def plot_xi_lines(self):
@@ -176,8 +193,10 @@ class bmplot:
     def plot_data(self, x, H, label=None):
         self.ax1.plot(x, H, self.fmt[self.n], color=self.color[self.n], label=label, markersize=self.size[self.n])
         truth = self.gt_fun(x)
-        error = 100*abs(H - truth) / (abs(truth) + 1e-15)
+        error = 100*abs(H - truth) / (abs(truth) + 1e-12)
         self.ax2.plot(x, error, self.fmt[self.n], color=self.color[self.n], markersize=self.size[self.n])
+        if(self.inlay):
+            self.ax1b.plot(x, H, self.fmt[self.n], color=self.color[self.n], markersize=self.size[self.n])
         self.n += 1
         return
 
@@ -192,14 +211,11 @@ class bmplot:
         # xi lines
         self.plot_xi_lines()
         # x and y labels, and title
-        ##self.ax1.set_xlabel(r'$x$', fontsize=27)
-        #self.ax1.get_xaxis().set_visible(False)
         self.ax1.get_xaxis().set_ticklabels([])
+        self.ax1.get_xaxis().set_visible(False)
         self.ax2.set_xlabel(r'$x$', fontsize=30)
-        #if(self.ylabel is not None):
-        #    self.ax1.set_ylabel(self.ylabel, fontsize=30)
-        #    self.ax2.set_ylabel(r'error (\%)', fontsize=34)
-        self.ax1.set_ylabel(r'Shift', fontsize=30)
+        shift_text = r'$\int \mathrm{d} y \, K(x,y,\xi) H(y)$'
+        self.ax1.set_ylabel(shift_text, fontsize=30)
         self.ax2.set_ylabel(r'error (\%)', fontsize=34)
         if(self.axy is not None):
             self.ax1.annotate(self.title, xy=self.axy, xycoords="axes fraction",
@@ -228,12 +244,31 @@ class bmplot:
             #markersizes = [1, 12, 14, 12, 14]
             #for count, legend_handle in enumerate(self.ax1.get_legend().legendHandles):
             #    legend_handle.set(markersize = markersizes[count])
-        # Temporary
-        self.ax1.set_xscale('symlog', linthresh=self.xi)
-        self.ax2.set_xscale('symlog', linthresh=self.xi)
+        # Do we scale it...?
+        if(self.symlog):
+            self.ax1.set_xscale('symlog', linthresh=self.xi)
+            self.ax2.set_xscale('symlog', linthresh=self.xi)
+            # Try to limit the number of tick labels ffs
+            every_nth = 2
+            for n, label in enumerate(self.ax2.xaxis.get_ticklabels()):
+                if n % every_nth != 0:
+                    label.set_visible(False)
         # Permanent
         self.ax1.set_xlim((-1,1))
         self.ax2.set_xlim((-1,1))
+        if(self.inlay):
+            self.ax1b.set_xlim((0.69e-3, 0.12))
+            self.ax1b.set_ylim((-2.08, 2.08))
+            self.ax1b.tick_params(colors='xkcd:ochre', which='both')
+            for item in self.ax1b.get_xticklabels():
+                item.set_fontsize(13)
+            for item in self.ax1b.get_yticklabels():
+                item.set_fontsize(13)
+            self.ax1b.set_xlabel(r'$x$', fontsize=13, color='xkcd:ochre')
+            self.ax1b.spines['left'].set_color('xkcd:ochre')
+            self.ax1b.spines['right'].set_color('xkcd:ochre')
+            self.ax1b.spines['top'].set_color('xkcd:ochre')
+            self.ax1b.spines['bottom'].set_color('xkcd:ochre')
         # the end
         self.fig.patch.set_alpha(0)
         self.fig.savefig('derp.pdf')
