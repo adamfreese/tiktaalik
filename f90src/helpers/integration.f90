@@ -53,14 +53,22 @@ module integration
         real(dp), intent(in) :: x, xi
         real(dp) :: integral
         !
-        real(dp), parameter :: eps  =  1e-15_dp ! to avoid undefined behavior
+        real(dp), parameter :: eps  =  1e-8_dp ! to avoid undefined behavior
         real(dp), parameter :: ymin = -1.0_dp + eps
         real(dp), parameter :: ymax =  1.0_dp - eps
         integral = 0.0_dp
-        ! New thingy...?
-        integral = integral + iqags(func,  ymin,       -abs(x)-eps)
-        integral = integral + iqags(func, -abs(x)+eps,  abs(x)-eps)
-        integral = integral + iqags(func,  abs(x)+eps,  ymax)
+        ! Break into 3 or 5 sub-regisions, depending on DGLAP or ERBL
+        if(abs(x) > abs(xi)) then
+          integral = integral + iqags(func,  ymin,       -abs(x) -eps)
+          integral = integral + iqags(func, -abs(x) +eps, abs(x) -eps)
+          integral = integral + iqags(func,  abs(x) +eps, ymax)
+        else
+          integral = integral + iqags(func,  ymin,       -abs(xi)-eps)
+          integral = integral + iqags(func, -abs(xi)+eps,-abs(x) -eps)
+          integral = integral + iqags(func, -abs(x) +eps, abs(x) -eps)
+          integral = integral + iqags(func,  abs(x) +eps, abs(xi)-eps)
+          integral = integral + iqags(func,  abs(xi)+eps, ymax)
+        endif
     end function adaptive_integrate
 
     subroutine swap(x,y)
