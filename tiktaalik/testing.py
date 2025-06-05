@@ -13,6 +13,15 @@ import pandas
 from .f90wrap.testing import dummy as f90src
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Interpixel
+
+def interpixel(x, xi=0.5, grid_type=1, n_pixels=20, i_pixel=10):
+    if(np.isscalar(x)):
+        x = np.array([x])
+    y = f90src.interpixel_wrap(n_pixels, i_pixel, x, xi, grid_type)
+    return y
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Continuum shifts
 
 def test_shift_cNS(x, xi, Q2, nlo=False, nstype=1):
