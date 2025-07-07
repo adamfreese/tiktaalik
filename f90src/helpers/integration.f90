@@ -6,7 +6,7 @@ module integration
 
   integer,  parameter :: dp = kind(1d0)
 
-  public :: integrate, adaptive_integrate
+  public :: integrate, integrate2, adaptive_integrate
 
   contains
 
@@ -16,7 +16,7 @@ module integration
     ! Calls qk21 from quadpack.
 
     function integrate(func, x, xi, n_pixels, grid_type) result(integral)
-        ! Do the spacing in eta instead, but break into regions the same way
+        ! Integration for evolution
         real(dp), external   :: func
         real(dp), intent(in) :: x, xi
         integer,  intent(in) :: n_pixels, grid_type
@@ -47,6 +47,35 @@ module integration
               f = func(y) * J
           end function pulled_back_func
     end function integrate
+
+    function integrate2(func, xi, n_pixels, grid_type) result(integral)
+        ! Integration for Wilson coefficients
+        real(dp), external   :: func
+        real(dp), intent(in) :: xi
+        integer,  intent(in) :: n_pixels, grid_type
+        real(dp) :: integral
+        !
+        real(dp) :: aa(5), ii(4), abserr(4), resabs(4), resasc(4)
+        integer :: i
+        aa(1) = pull_back( -1.0_dp, xi, n_pixels, grid_type)
+        aa(2) = pull_back(-abs(xi), xi, n_pixels, grid_type)
+        aa(3) = pull_back  (0.0_dp, xi, n_pixels, grid_type)
+        aa(4) = pull_back( abs(xi), xi, n_pixels, grid_type)
+        aa(5) = pull_back(  1.0_dp, xi, n_pixels, grid_type)
+        do i=1, 4, 1
+          call qk21(pulled_back_func, aa(i), aa(i+1), ii(i), abserr(i), resabs(i), resasc(i))
+        end do
+        integral = sum(ii)
+        return
+        contains
+          function pulled_back_func(eta) result(f)
+              real(dp), intent(in) :: eta
+              real(dp) :: f, J, x
+              x = push_forward(eta, xi, n_pixels, grid_type)
+              J = push_jacob(  eta, xi, n_pixels, grid_type)
+              f = func(x) * J
+          end function pulled_back_func
+    end function integrate2
 
     function adaptive_integrate(func, x, xi) result(integral)
         real(dp), external :: func

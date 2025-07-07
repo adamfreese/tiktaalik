@@ -130,7 +130,7 @@ def get_nfl(Q2):
     return 5
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Routines to create evolution matrices
+# Routines to obtain evolution matrices
 
 def matrix_VNS(ns_type=1):
     ''' Evolution matrix for *non-singlet* Q->Q, helicity-independent (V-type).
@@ -185,7 +185,18 @@ def matrix_ASG():
     return M
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Routines to create kernels
+# Routines to obtain Wilson coefficient matrices
+
+def dvcs_Cq(nlo=False):
+    # TODO: docstring
+    nx  = f90src.get_nx_wrap()
+    nxi = f90src.get_nxi_wrap()
+    nQ2 = f90src.get_nq2_wrap()
+    C = f90src.dvcs_cq_wrap(nx, nxi, nQ2, nlo)
+    return C
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Routines to obtain evolution kernel matrices
 
 def kernel_VQQ(Q2=pars.mc2, nfl=4, nlo=False, ns_type=1):
     ''' Evolution kernel for Q->Q, helicity-independent (V-type).

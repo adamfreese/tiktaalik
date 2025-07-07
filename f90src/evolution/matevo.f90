@@ -7,27 +7,29 @@
 
 module matevo
   use alpha_qcd,  only: get_alpha_QCD, get_neff
-  use constants,  only: pi
+  use constants,  only: pi, i_
   use convolution
   use kernels_common
   use kernels_lo
   use kernels_nlo
+  use wilson_dvcs
   use pixelation, only: initialize_lagrange_weights
 
   implicit none
   private
 
   integer,  parameter, private :: dp = kind(1d0)
-  !real(dp), parameter, private :: pi = acos(-1.0_dp)
 
   integer, parameter, private :: nfl_min = 3
   integer, parameter, private :: nfl_max = 5
 
   ! Used for caching
   integer  :: nx_cache = 0, nxi_cache = 0, nQ2_cache = 0
+  integer  :: grid_type_cache = 0
   logical  :: l_nlo_cache = .false.
 
   real(dp), allocatable, dimension(:) :: xi_cache
+  real(dp), allocatable, dimension(:) :: Q2_cache
 
   ! Zero kernel is just nx by nx
   real(dp), allocatable, dimension(:,:) :: K_zero, K_zero_2
@@ -45,10 +47,14 @@ module matevo
   ! with the first nx values being singlet quark and the last nx being gluon.
   real(dp), allocatable, dimension(:,:,:,:) :: M_NS_pls, M_NS_min, MV_SG, MA_SG
 
+  ! In Wilson coefficients, indices are for (xi,x)
+  real(dp), allocatable, dimension(:,:) :: re_Cq0_dvcs, im_Cq0_dvcs, re_Cq1_dvcs, im_Cq1_dvcs
+
   public :: make_kernels, make_matrices, &
       & evomat_V_NS, evomat_V_SG, evomat_A_NS, evomat_A_SG, &
       & kernel_V_QQ, kernel_V_QG, kernel_V_GQ, kernel_V_GG, &
       & kernel_A_QQ, kernel_A_QG, kernel_A_GQ, kernel_A_GG, &
+      & Cq_dvcs, &
       & get_nx, get_nxi, get_nQ2, get_lnlo
 
   contains
@@ -77,6 +83,8 @@ module matevo
         call make_kernels_NS_1(nx, nxi, grid_type)
         call make_kernels_SG_0(nx, nxi, grid_type)
         call make_kernels_SG_1(nx, nxi, grid_type)
+        ! Save the grid type
+        grid_type_cache = grid_type
     end subroutine make_kernels
 
     subroutine make_matrices(nQ2, Q2_array, l_nlo)
@@ -87,12 +95,19 @@ module matevo
         logical,  intent(in) :: l_nlo
         ! Keep track of whether we're doing NLO
         l_nlo_cache = l_nlo
-        ! Keep track of the number of Q2 points
+        ! Keep track of the number of Q2 points, and what they are
         nQ2_cache = nQ2
+        if(allocated(Q2_cache)) deallocate(Q2_cache)
+        allocate(Q2_cache(nQ2))
+        Q2_cache = Q2_array
         ! Make evolution matrices
         call make_evomat_NS(nx_cache, nxi_cache, nQ2, Q2_array, l_nlo)
         call make_evomat_V_SG(nx_cache, nxi_cache, nQ2, Q2_array, l_nlo)
         call make_evomat_A_SG(nx_cache, nxi_cache, nQ2, Q2_array, l_nlo)
+        ! Make Wilson coefficient matrices?
+        call make_dvcs_Cq0(nx_cache, nxi_cache, nQ2, Q2_array, grid_type_cache)
+        call make_dvcs_Cq1(nx_cache, nxi_cache, nQ2, Q2_array, grid_type_cache)
+        ! TODO
     end subroutine make_matrices
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -276,6 +291,29 @@ module matevo
         real(dp), dimension(2*nx, 2*nx, nxi, nQ2) :: M
         M = MA_SG
     end function evomat_A_SG
+
+    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ! Public methods to return Wilson coefficient matrices
+
+    function Cq_dvcs(nxi, nx, nQ2, l_nlo) result(M)
+        integer,  intent(in) :: nxi, nx, nQ2
+        logical,  intent(in) :: l_nlo
+        complex(dp), dimension(nxi, nx, nQ2) :: M
+        complex(dp), dimension(nxi, nx) :: M0, M1
+        integer :: iq
+        ! For now, only LO
+        M0 = re_Cq0_dvcs + i_*im_Cq0_dvcs
+        M1 = re_Cq1_dvcs + i_*im_Cq1_dvcs
+        !$OMP PARALLEL DO
+        do iq=1, nQ2, 1
+          if(l_nlo) then
+            M(:,:,iq) = M0 + get_alpha_QCD(Q2_cache(iq))/(2.*pi)*M1
+          else
+            M(:,:,iq) = M0
+          endif
+        end do
+        !$OMP END PARALLEL DO
+    end function Cq_dvcs
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! Methods to make kernel matrices
@@ -593,6 +631,47 @@ module matevo
           !$OMP END PARALLEL DO
         end do
     end subroutine make_evomat_A_SG
+
+    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ! Methods to make Wilson coefficient matrices
+
+    subroutine make_dvcs_Cq0(nx, nxi, nQ2, Q2_array, grid_type)
+        integer,  intent(in) :: nx, nxi, nQ2, grid_type
+        real(dp), intent(in) :: Q2_array(nQ2)
+        integer :: ix, iz, iq, ic
+        if(allocated(re_Cq0_dvcs)) deallocate(re_Cq0_dvcs)
+        if(allocated(im_Cq0_dvcs)) deallocate(im_Cq0_dvcs)
+        allocate(re_Cq0_dvcs(nxi,nx))
+        allocate(im_Cq0_dvcs(nxi,nx))
+        do iz=1, nxi, 1
+        !$OMP PARALLEL DO
+        do ix=1, nx, 1
+          re_Cq0_dvcs(iz,ix) = pixel_coef(zero_func, re_Cq0_dvcs_sub, re_Cq0_dvcs_cst, xi_cache(iz), nx, ix, grid_type)
+          im_Cq0_dvcs(iz,ix) = pixel_coef(zero_func, zero_func,       im_Cq0_dvcs_cst, xi_cache(iz), nx, ix, grid_type)
+        end do
+        !$OMP END PARALLEL DO
+        end do
+    end subroutine make_dvcs_Cq0
+
+    subroutine make_dvcs_Cq1(nx, nxi, nQ2, Q2_array, grid_type)
+        integer,  intent(in) :: nx, nxi, nQ2, grid_type
+        real(dp), intent(in) :: Q2_array(nQ2)
+        integer :: ix, iz, iq, ic
+        if(allocated(re_Cq1_dvcs)) deallocate(re_Cq1_dvcs)
+        if(allocated(im_Cq1_dvcs)) deallocate(im_Cq1_dvcs)
+        allocate(re_Cq1_dvcs(nxi,nx))
+        allocate(im_Cq1_dvcs(nxi,nx))
+        do iz=1, nxi, 1
+        !$OMP PARALLEL DO
+        do ix=1, nx, 1
+          re_Cq1_dvcs(iz,ix) = pixel_coef(re_Cq1_dvcs_reg, re_Cq1_dvcs_sub, re_Cq1_dvcs_cst, xi_cache(iz), nx, ix, grid_type)
+          im_Cq1_dvcs(iz,ix) = pixel_coef(im_Cq1_dvcs_reg, im_Cq1_dvcs_sub, im_Cq1_dvcs_cst, xi_cache(iz), nx, ix, grid_type)
+        end do
+        !$OMP END PARALLEL DO
+        end do
+    end subroutine make_dvcs_Cq1
+
+    ! TODO
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! RK4

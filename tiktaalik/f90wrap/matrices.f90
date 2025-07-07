@@ -192,4 +192,16 @@ module dummy
         K = kernel_A_gg(Q2, nx, nxi, nfl, l_nlo)
     end subroutine evokernel_agg_wrap
 
+    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ! Wilson coefficient matrices
+
+    subroutine dvcs_cq_wrap(nx, nxi, nQ2, l_nlo, C)
+        integer,  parameter   :: dp = kind(1d0)
+        integer,  intent(in)  :: nx, nxi, nQ2
+        logical,  intent(in)  :: l_nlo
+        complex(dp), intent(out) :: C(nxi, nx, nQ2)
+        !
+        C = Cq_dvcs(nxi, nx, nQ2, l_nlo)
+    end subroutine dvcs_cq_wrap
+
 end module dummy

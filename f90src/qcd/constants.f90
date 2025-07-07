@@ -18,6 +18,7 @@ module constants
   real(dp), public, parameter :: TF = 1.0_dp/2.0_dp
 
   ! Mathematical constants
+  complex(dp), public, parameter :: i_ = complex(0.0_dp, 1.0_dp)
   real(dp), public, parameter :: pi = acos(-1.0_dp)
   real(dp), public, parameter :: zeta2 = pi**2 / 6.0_dp
   real(dp), public, parameter :: zeta3 = 1.2020569031_dp
