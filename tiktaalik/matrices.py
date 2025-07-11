@@ -195,6 +195,14 @@ def dvcs_Cq(nlo=False):
     C = f90src.dvcs_cq_wrap(nx, nxi, nQ2, nlo)
     return C
 
+def dvcs_Cg(nlo=False):
+    # TODO: docstring
+    nx  = f90src.get_nx_wrap()
+    nxi = f90src.get_nxi_wrap()
+    nQ2 = f90src.get_nq2_wrap()
+    C = f90src.dvcs_cg_wrap(nx, nxi, nQ2, nlo)
+    return C
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Routines to obtain evolution kernel matrices
 

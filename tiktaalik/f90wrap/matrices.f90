@@ -204,4 +204,13 @@ module dummy
         C = Cq_dvcs(nxi, nx, nQ2, l_nlo)
     end subroutine dvcs_cq_wrap
 
+    subroutine dvcs_cg_wrap(nx, nxi, nQ2, l_nlo, C)
+        integer,  parameter   :: dp = kind(1d0)
+        integer,  intent(in)  :: nx, nxi, nQ2
+        logical,  intent(in)  :: l_nlo
+        complex(dp), intent(out) :: C(nxi, nx, nQ2)
+        !
+        C = CG_dvcs(nxi, nx, nQ2, l_nlo)
+    end subroutine dvcs_cg_wrap
+
 end module dummy

@@ -48,13 +48,14 @@ module matevo
   real(dp), allocatable, dimension(:,:,:,:) :: M_NS_pls, M_NS_min, MV_SG, MA_SG
 
   ! In Wilson coefficients, indices are for (xi,x)
-  real(dp), allocatable, dimension(:,:) :: re_Cq0_dvcs, im_Cq0_dvcs, re_Cq1_dvcs, im_Cq1_dvcs
+  real(dp), allocatable, dimension(:,:) :: re_Cq0_dvcs, im_Cq0_dvcs, &
+      & re_Cq1_dvcs, im_Cq1_dvcs, re_CG1_dvcs, im_CG1_dvcs
 
   public :: make_kernels, make_matrices, &
       & evomat_V_NS, evomat_V_SG, evomat_A_NS, evomat_A_SG, &
       & kernel_V_QQ, kernel_V_QG, kernel_V_GQ, kernel_V_GG, &
       & kernel_A_QQ, kernel_A_QG, kernel_A_GQ, kernel_A_GG, &
-      & Cq_dvcs, &
+      & Cq_dvcs, CG_dvcs, &
       & get_nx, get_nxi, get_nQ2, get_lnlo
 
   contains
@@ -107,7 +108,7 @@ module matevo
         ! Make Wilson coefficient matrices?
         call make_dvcs_Cq0(nx_cache, nxi_cache, nQ2, Q2_array, grid_type_cache)
         call make_dvcs_Cq1(nx_cache, nxi_cache, nQ2, Q2_array, grid_type_cache)
-        ! TODO
+        call make_dvcs_CG1(nx_cache, nxi_cache, nQ2, Q2_array, grid_type_cache)
     end subroutine make_matrices
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -314,6 +315,42 @@ module matevo
         end do
         !$OMP END PARALLEL DO
     end function Cq_dvcs
+
+    function eq2(Q2) result(sigma)
+        ! TODO: put somewhere else, in QCD module maybe
+        real(dp), intent(in) :: Q2
+        real(dp) :: sigma
+        !
+        integer :: nfl
+        nfl = get_neff(Q2)
+        select case(nfl)
+        case(3)
+          sigma = 2./3.
+        case(4)
+          sigma = 10./9.
+        case(5)
+          sigma = 11./9.
+        end select
+    end function eq2
+
+    function CG_dvcs(nxi, nx, nQ2, l_nlo) result(M)
+        integer,  intent(in) :: nxi, nx, nQ2
+        logical,  intent(in) :: l_nlo
+        complex(dp), dimension(nxi, nx, nQ2) :: M
+        complex(dp), dimension(nxi, nx) :: M0, M1
+        integer :: iq
+        ! For now, only LO
+        M1 = re_CG1_dvcs + i_*im_CG1_dvcs
+        if(l_nlo) then
+          !$OMP PARALLEL DO
+          do iq=1, nQ2, 1
+            M(:,:,iq) = eq2(Q2_cache(iq))*get_alpha_QCD(Q2_cache(iq))/(2.*pi)*M1
+          end do
+          !$OMP END PARALLEL DO
+        else
+          M = 0.0_dp
+        endif
+    end function CG_dvcs
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! Methods to make kernel matrices
@@ -671,7 +708,23 @@ module matevo
         end do
     end subroutine make_dvcs_Cq1
 
-    ! TODO
+    subroutine make_dvcs_CG1(nx, nxi, nQ2, Q2_array, grid_type)
+        integer,  intent(in) :: nx, nxi, nQ2, grid_type
+        real(dp), intent(in) :: Q2_array(nQ2)
+        integer :: ix, iz, iq, ic
+        if(allocated(re_CG1_dvcs)) deallocate(re_CG1_dvcs)
+        if(allocated(im_CG1_dvcs)) deallocate(im_CG1_dvcs)
+        allocate(re_CG1_dvcs(nxi,nx))
+        allocate(im_CG1_dvcs(nxi,nx))
+        do iz=1, nxi, 1
+        !$OMP PARALLEL DO
+        do ix=1, nx, 1
+          re_CG1_dvcs(iz,ix) = pixel_coef(re_CG1_dvcs_reg, re_CG1_dvcs_sub, re_CG1_dvcs_cst, xi_cache(iz), nx, ix, grid_type)
+          im_CG1_dvcs(iz,ix) = pixel_coef(im_CG1_dvcs_reg, im_CG1_dvcs_sub, im_CG1_dvcs_cst, xi_cache(iz), nx, ix, grid_type)
+        end do
+        !$OMP END PARALLEL DO
+        end do
+    end subroutine make_dvcs_CG1
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! RK4
