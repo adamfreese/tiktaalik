@@ -1,8 +1,5 @@
 set(localfiles
-  "convolution"
-  "kernels_common"
-  "kernels_lo"
-  "kernels_nlo"
+  "wilson_dvcs"
   )
 
 set(localsources ${localfiles})

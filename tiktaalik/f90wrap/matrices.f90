@@ -7,7 +7,9 @@
 
 module dummy
   use gridspace
-  use matevo
+  use matrices_common
+  use matrices_evolution
+  use matrices_wilson
   use pixelation
 
   implicit none
@@ -30,27 +32,47 @@ module dummy
     end subroutine pixelspace_wrap
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ! Initialization routines, **MUST** be called first!
+    ! Initialization routines
 
-    subroutine make_kernels_wrap(nx, nxi, xi_array, grid_type)
-        ! Initializes kernel matrices, using a particular xi array.
+    subroutine initialize_x_xi_wrap(nx, nxi, xi_grid, grid_type, lagrange_order)
         integer,  parameter  :: dp = kind(1d0)
-        integer,  intent(in) :: nx, nxi, grid_type
-        real(dp), intent(in) :: xi_array(nxi)
-        call make_kernels(nx, nxi, xi_array, grid_type)
+        integer,  intent(in) :: nx, nxi, grid_type, lagrange_order
+        real(dp), intent(in) :: xi_grid(nxi)
+        !print *, "Flag A"
+        !print *, nx, nxi, grid_type
+        call initialize_x_xi(nx, nxi, xi_grid, grid_type, lagrange_order)
+    end subroutine initialize_x_xi_wrap
+
+    subroutine initialize_Q2_wrap(nQ2, Q2_array)
+        integer,  parameter  :: dp = kind(1d0)
+        integer,  intent(in) :: nQ2
+        real(dp), intent(in) :: Q2_array(nQ2)
+        print *, "Flag Q2"
+        print *, nQ2
+        print *, Q2_array
+        call initialize_Q2(nQ2, Q2_array)
+    end subroutine initialize_Q2_wrap
+
+    subroutine make_kernels_wrap()
+        ! Initializes kernel matrices
+        call make_kernels()
     end subroutine make_kernels_wrap
 
     subroutine make_matrices_wrap(nQ2, Q2_array, l_nlo)
         ! Initializes evolution matrices, using a particular Q2 array.
         ! The kernels must have already been initialized.
-        ! The nx and nxi used here must be consistent with the nx and nxi
-        ! that the kernels were initialized with.
         integer,  parameter  :: dp = kind(1d0)
         integer,  intent(in) :: nQ2
         real(dp), intent(in) :: Q2_array(nQ2)
         logical,  intent(in) :: l_nlo
-        call make_matrices(nQ2, Q2_array, l_nlo)
+        call make_evolution_matrices(nQ2, l_nlo)
     end subroutine make_matrices_wrap
+
+    subroutine make_wilson_wrap(nQ2)
+        ! Initializes Wilson coefficient matrices.
+        integer,  intent(in) :: nQ2
+        call make_wilson_matrices(nQ2)
+    end subroutine make_wilson_wrap
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! Routines to pass chached grid sizes to Python (to ease user burden)
@@ -69,6 +91,27 @@ module dummy
         integer, intent(out) :: nQ2
         nQ2 = get_nQ2()
     end subroutine get_nQ2_wrap
+
+    subroutine get_x_wrap(nx, nxi, xx)
+        integer,  parameter   :: dp = kind(1d0)
+        integer,  intent(in)  :: nx, nxi
+        real(dp), intent(out) :: xx(nx,nxi)
+        xx = get_x(nx, nxi)
+    end subroutine get_x_wrap
+
+    subroutine get_xi_wrap(nxi, xi)
+        integer,  parameter   :: dp = kind(1d0)
+        integer,  intent(in)  :: nxi
+        real(dp), intent(out) :: xi(nxi)
+        xi = get_xi(nxi)
+    end subroutine get_xi_wrap
+
+    subroutine get_Q2_wrap(nQ2, Q2)
+        integer,  parameter   :: dp = kind(1d0)
+        integer,  intent(in)  :: nQ2
+        real(dp), intent(out) :: Q2(nQ2)
+        Q2 = get_Q2(nQ2)
+    end subroutine get_Q2_wrap
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! Evolution matrices
@@ -191,5 +234,26 @@ module dummy
         !
         K = kernel_A_gg(Q2, nx, nxi, nfl, l_nlo)
     end subroutine evokernel_agg_wrap
+
+    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ! Wilson coefficient matrices
+
+    subroutine dvcs_cq_wrap(nx, nxi, nQ2, l_nlo, C)
+        integer,  parameter   :: dp = kind(1d0)
+        integer,  intent(in)  :: nx, nxi, nQ2
+        logical,  intent(in)  :: l_nlo
+        complex(dp), intent(out) :: C(nxi, nx, nQ2)
+        !
+        C = Cq_dvcs(nxi, nx, nQ2, l_nlo)
+    end subroutine dvcs_cq_wrap
+
+    subroutine dvcs_cg_wrap(nx, nxi, nQ2, l_nlo, C)
+        integer,  parameter   :: dp = kind(1d0)
+        integer,  intent(in)  :: nx, nxi, nQ2
+        logical,  intent(in)  :: l_nlo
+        complex(dp), intent(out) :: C(nxi, nx, nQ2)
+        !
+        C = CG_dvcs(nxi, nx, nQ2, l_nlo)
+    end subroutine dvcs_cg_wrap
 
 end module dummy
