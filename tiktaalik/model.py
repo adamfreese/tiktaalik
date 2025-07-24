@@ -40,7 +40,10 @@ def Hu(x, xi, t):
         xi = np.array([xi])
     if(np.isscalar(t)):
         t = np.array([t])
-    H = f90src.hu_wrap(x,xi,t)
+    if(x.ndim==2):
+        H = f90src.hu_wrap_2d(x,xi,t)
+    else:
+        H = f90src.hu_wrap(x,xi,t)
     return H
 
 def Hd(x, xi, t):
@@ -50,7 +53,10 @@ def Hd(x, xi, t):
         xi = np.array([xi])
     if(np.isscalar(t)):
         t = np.array([t])
-    H = f90src.hd_wrap(x,xi,t)
+    if(x.ndim==2):
+        H = f90src.hd_wrap_2d(x,xi,t)
+    else:
+        H = f90src.hd_wrap(x,xi,t)
     return H
 
 def Hs(x, xi, t):
@@ -60,7 +66,10 @@ def Hs(x, xi, t):
         xi = np.array([xi])
     if(np.isscalar(t)):
         t = np.array([t])
-    H = f90src.hs_wrap(x,xi,t)
+    if(x.ndim==2):
+        H = f90src.hs_wrap_2d(x,xi,t)
+    else:
+        H = f90src.hs_wrap(x,xi,t)
     return H
 
 def Hg(x, xi, t):
@@ -70,45 +79,8 @@ def Hg(x, xi, t):
         xi = np.array([xi])
     if(np.isscalar(t)):
         t = np.array([t])
-    H = f90src.hg_wrap(x,xi,t)
-    return H
-
-def Hu_val(x, xi, t):
-    if(np.isscalar(x)):
-        x = np.array([x])
-    if(np.isscalar(xi)):
-        xi = np.array([xi])
-    if(np.isscalar(t)):
-        t = np.array([t])
-    H = f90src.hu_val_wrap(x,xi,t)
-    return H
-
-def Hd_val(x, xi, t):
-    if(np.isscalar(x)):
-        x = np.array([x])
-    if(np.isscalar(xi)):
-        xi = np.array([xi])
-    if(np.isscalar(t)):
-        t = np.array([t])
-    H = f90src.hd_val_wrap(x,xi,t)
-    return H
-
-def Hu_sea(x, xi, t):
-    if(np.isscalar(x)):
-        x = np.array([x])
-    if(np.isscalar(xi)):
-        xi = np.array([xi])
-    if(np.isscalar(t)):
-        t = np.array([t])
-    H = f90src.hu_sea_wrap(x,xi,t)
-    return H
-
-def Hd_sea(x, xi, t):
-    if(np.isscalar(x)):
-        x = np.array([x])
-    if(np.isscalar(xi)):
-        xi = np.array([xi])
-    if(np.isscalar(t)):
-        t = np.array([t])
-    H = f90src.hd_sea_wrap(x,xi,t)
+    if(x.ndim==2):
+        H = f90src.hg_wrap_2d(x,xi,t)
+    else:
+        H = f90src.hg_wrap(x,xi,t)
     return H
