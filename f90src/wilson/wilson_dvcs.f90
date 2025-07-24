@@ -112,7 +112,9 @@ module wilson_dvcs
         !
         zbar = 0.5*(x+xi)/xi
         z = 0.5*(xi-x)/xi
-        w = TF*( 4.*z*abslog(zbar) + 8.*abslog(zbar) - 2.*log2(zbar) ) / (xi-x)**2
+        !w = TF*( 4.*z*abslog(zbar) + 8.*abslog(zbar) - 2.*log2(zbar) ) / (xi-x)**2
+        ! New approach to A3
+        w = TF*( 4.*z*abslog(zbar) - 2.*log2(zbar) ) / (xi-x)**2
     end function re_CG1_dvcs_reg
 
     function re_CG1_dvcs_sub(x,xi) result(w)
@@ -121,6 +123,8 @@ module wilson_dvcs
         real(dp) :: w
         !
         w = TF * 2./xi*abslog(0.5*(xi-x)/xi) / (xi-x)
+        ! New approach to A3
+        w = w + TF * 8.*abslog(0.5*(xi+x)/xi) / (xi-x)**2
     end function re_CG1_dvcs_sub
 
     function re_CG1_dvcs_cst(xi) result(w)
@@ -129,6 +133,8 @@ module wilson_dvcs
         real(dp) :: w
         !
         w = TF/xi * ( log2(0.5*(1.+xi)/xi) - log2(0.5*(1.-xi)/xi) + pi**2 )
+        ! New approach to A3
+        w = w + TF/xi * 4. * ( log(0.5*(1.-xi)/xi)/(1.+xi) - log(0.5*(1.+xi)/xi)/(1.-xi) )
     end function re_CG1_dvcs_cst
 
     function im_CG1_dvcs_reg(x,xi) result(w)
@@ -159,6 +165,8 @@ module wilson_dvcs
         real(dp) :: w
         !
         w = 2.*pi * TF/xi * log(0.5*(1.-xi)/xi)
+        ! New approach to A3 releaved a missing term...?
+        w = w - TF/xi * 4.*pi
     end function im_CG1_dvcs_cst
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
