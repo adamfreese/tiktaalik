@@ -308,7 +308,7 @@ module matevo
         !$OMP PARALLEL DO
         do iq=1, nQ2, 1
           if(l_nlo) then
-            M(:,:,iq) = M0 + get_alpha_QCD(Q2_cache(iq))/(2.*pi)*M1
+            M(:,:,iq) = M0 + get_alpha_QCD(Q2_cache(iq))/(4.*pi)*M1
           else
             M(:,:,iq) = M0
           endif
@@ -344,7 +344,7 @@ module matevo
         if(l_nlo) then
           !$OMP PARALLEL DO
           do iq=1, nQ2, 1
-            M(:,:,iq) = eq2(Q2_cache(iq))*get_alpha_QCD(Q2_cache(iq))/(2.*pi)*M1
+            M(:,:,iq) = eq2(Q2_cache(iq))*get_alpha_QCD(Q2_cache(iq))/(4.*pi)*M1
           end do
           !$OMP END PARALLEL DO
         else
