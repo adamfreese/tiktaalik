@@ -25,7 +25,7 @@ module matrices_common
   real(dp), allocatable, private :: xi_(:)
   real(dp), allocatable, private :: Q2_(:)
 
-  public :: get_nx, get_nxi, get_nQ2, get_grid_type, get_xi, get_Q2, &
+  public :: get_nx, get_nxi, get_nQ2, get_grid_type, get_x, get_xi, get_Q2, &
       & initialize_x_xi, initialize_Q2
 
   contains
@@ -73,6 +73,12 @@ module matrices_common
         integer :: grid_type
         grid_type = gt_
     end function get_grid_type
+
+    function get_x(nx, nxi) result(xx)
+        integer, intent(in) :: nx, nxi
+        real(dp) :: xx(nx,nxi)
+        xx = xx_
+    end function get_x
 
     function get_xi(nxi) result(xi)
         integer, intent(in) :: nxi
@@ -138,6 +144,5 @@ module matrices_common
         ! Set the cached arrays
         Q2_ = Q2_array
     end subroutine initialize_Q2
-
 
 end module matrices_common

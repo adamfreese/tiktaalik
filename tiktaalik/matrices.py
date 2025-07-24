@@ -46,28 +46,27 @@ def first_initialization():
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Methods for the user to retrieve the x, xi and Q2 grids in use
 
-# TODO
-
-def pixelspace(nx, xi=0.5, grid_type=1):
-    # TODO: replace by returning cached x space
-    ''' The x space used by tiktaalik.
-    1. grid_type=1, linear grid (default)
-       The x values are the central values of nx intervals evenly dividing
-       the domain [-1,1]. For instance, if nx=4, then [-1,1] is divided into the
-       intervals [-1,-0.5], [-0.5,0], [0,0.5] and [0.5,1]. The midpoints of these
-       are -0.75, -0.25, 0.25 and 0.75. These four midpoints are used as x values.
-       Independent of xi.
-    2. grid_type=2, log-linear-log
-       x is broken down into the two DGLAP regions (x < -xi and x > xi) and the
-       ERBL region (-xi < x < xi). nx/4 points are placed in each of the DGLAP
-       regions, and are geometrically spaced, more closely around the x=-xi or
-       x=xi endpoint. The other nx/2 points are linearly spaced in the ERBL region.
-       The placement of the points in each region is done using midpoints
-       (geometric rather than arithmetic in the DGLAP region) of interals,
-       similarly to the linear grid.
+def get_x_grid():
+    ''' Returns the x grid in use.
+    The returned grid is two-dimensional, with dimensions (nx,nxi).
+    The reason for this is that, depending on the grid type,
+    the x spacing may be xi-dependent.
+    Thus, this is effectively an array of nxi x arrays.
     '''
-    x = f90src.pixelspace_wrap(nx, xi, grid_type)
+    nx  = matrix_dict['nx']
+    nxi = matrix_dict['nxi']
+    x = f90src.get_x_wrap(nx, nxi)
     return x
+
+def get_xi_array():
+    nxi = matrix_dict['nxi']
+    xi = f90src.get_xi_wrap(nxi)
+    return xi
+
+def get_Q2_array():
+    nQ2 = matrix_dict['nQ2']
+    Q2 = f90src.get_q2_wrap(nQ2)
+    return Q2
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Methods for the user to set x, xi and Q2 grids
@@ -97,7 +96,7 @@ def set_Q2_grid(Q2):
     # TODO: docstring
     ''' TODO: dicstring '''
     # Assert requirements
-    assert(Q2.shape[0] > 2)
+    assert(Q2.shape[0] >= 2)
     # Cache the data sent by the user
     matrix_dict['nQ2'] = Q2.shape[0]
     matrix_dict['Q2']  = Q2
@@ -284,17 +283,29 @@ def matrix_ASG():
 
 def dvcs_Cq(nlo=False):
     # TODO: docstring
+    # Get the matrix dimensions
     nx  = f90src.get_nx_wrap()
     nxi = f90src.get_nxi_wrap()
     nQ2 = f90src.get_nq2_wrap()
+    # Make sure the Wilson coefficient matrices are initialized
+    if(matrix_dict['wilson_init']==False):
+        f90src.make_wilson_wrap(nQ2)
+        matrix_dict['wilson_init'] = True
+    # Get the coefficients
     C = f90src.dvcs_cq_wrap(nx, nxi, nQ2, nlo)
     return C
 
 def dvcs_Cg(nlo=False):
     # TODO: docstring
+    # Get the matrix dimensions
     nx  = f90src.get_nx_wrap()
     nxi = f90src.get_nxi_wrap()
     nQ2 = f90src.get_nq2_wrap()
+    # Make sure the Wilson coefficient matrices are initialized
+    if(matrix_dict['wilson_init']==False):
+        f90src.make_wilson_wrap(nQ2)
+        matrix_dict['wilson_init'] = True
+    # Get the coefficients
     C = f90src.dvcs_cg_wrap(nx, nxi, nQ2, nlo)
     return C
 
@@ -336,8 +347,7 @@ def get_nfl(Q2):
     return 5
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Initialization routines
-# No longer necessary for user to call manually
+# Deprecated methods
 
 def initialize_kernels(nx, xi, grid_type=1):
     ''' Deprecated routine. '''
@@ -398,3 +408,24 @@ def initialize_evolution_matrices(Q2=matrix_dict['Q2'], nlo=False):
     # Finally, make the evolution matrices
     f90src.make_matrices_wrap(Q2, nlo)
     return
+
+def pixelspace(nx, xi=0.5, grid_type=1):
+    # TODO: replace by returning cached x space
+    ''' The x space used by tiktaalik.
+    1. grid_type=1, linear grid (default)
+       The x values are the central values of nx intervals evenly dividing
+       the domain [-1,1]. For instance, if nx=4, then [-1,1] is divided into the
+       intervals [-1,-0.5], [-0.5,0], [0,0.5] and [0.5,1]. The midpoints of these
+       are -0.75, -0.25, 0.25 and 0.75. These four midpoints are used as x values.
+       Independent of xi.
+    2. grid_type=2, log-linear-log
+       x is broken down into the two DGLAP regions (x < -xi and x > xi) and the
+       ERBL region (-xi < x < xi). nx/4 points are placed in each of the DGLAP
+       regions, and are geometrically spaced, more closely around the x=-xi or
+       x=xi endpoint. The other nx/2 points are linearly spaced in the ERBL region.
+       The placement of the points in each region is done using midpoints
+       (geometric rather than arithmetic in the DGLAP region) of interals,
+       similarly to the linear grid.
+    '''
+    x = f90src.pixelspace_wrap(nx, xi, grid_type)
+    return x

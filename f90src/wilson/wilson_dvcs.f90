@@ -213,17 +213,6 @@ module wilson_dvcs
           end function integrand
     end function pixel_coef_reg
 
-    function pixel_coef_cst(kernel, xi, n_pixels, i, grid_type) result(shift)
-        real(dp), external   :: kernel
-        real(dp), intent(in) :: xi
-        integer,  intent(in) :: n_pixels, i, grid_type
-        real(dp) :: shift
-        !
-        real(dp) :: fxi
-        fxi = interpixel(n_pixels, i, xi, xi, grid_type)
-        shift = kernel(xi) * fxi
-    end function pixel_coef_cst
-
     function pixel_coef_sub(kernel, xi, n_pixels, i, grid_type) result(shift)
         real(dp), external   :: kernel
         real(dp), intent(in) :: xi
@@ -244,5 +233,15 @@ module wilson_dvcs
           end function integrand
     end function pixel_coef_sub
 
+    function pixel_coef_cst(kernel, xi, n_pixels, i, grid_type) result(shift)
+        real(dp), external   :: kernel
+        real(dp), intent(in) :: xi
+        integer,  intent(in) :: n_pixels, i, grid_type
+        real(dp) :: shift
+        !
+        real(dp) :: fxi
+        fxi = interpixel(n_pixels, i, xi, xi, grid_type)
+        shift = kernel(xi) * fxi
+    end function pixel_coef_cst
 
 end module wilson_dvcs
