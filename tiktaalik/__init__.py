@@ -3,3 +3,6 @@ from . import qcd
 from . import matrices
 from . import model
 from . import pars
+
+# Run first initialization
+matrices.first_initialization()

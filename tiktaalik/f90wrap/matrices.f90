@@ -7,7 +7,8 @@
 
 module dummy
   use gridspace
-  use matevo
+  use matrices_common
+  use matrices_evolution
   use pixelation
 
   implicit none
@@ -30,14 +31,33 @@ module dummy
     end subroutine pixelspace_wrap
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ! Initialization routines, **MUST** be called first!
+    ! Initialization routines
 
-    subroutine make_kernels_wrap(nx, nxi, xi_array, grid_type)
+    subroutine initialize_x_xi_wrap(nx, nxi, xi_grid, grid_type, lagrange_order)
+        integer,  parameter  :: dp = kind(1d0)
+        integer,  intent(in) :: nx, nxi, grid_type, lagrange_order
+        real(dp), intent(in) :: xi_grid(nxi)
+        !print *, "Flag A"
+        !print *, nx, nxi, grid_type
+        call initialize_x_xi(nx, nxi, xi_grid, grid_type, lagrange_order)
+    end subroutine initialize_x_xi_wrap
+
+    subroutine initialize_Q2_wrap(nQ2, Q2_array)
+        integer,  parameter  :: dp = kind(1d0)
+        integer,  intent(in) :: nQ2
+        real(dp), intent(in) :: Q2_array(nQ2)
+        print *, "Flag Q2"
+        print *, nQ2
+        print *, Q2_array
+        call initialize_Q2(nQ2, Q2_array)
+    end subroutine initialize_Q2_wrap
+
+    subroutine make_kernels_wrap()!nx, nxi, xi_array, grid_type)
         ! Initializes kernel matrices, using a particular xi array.
         integer,  parameter  :: dp = kind(1d0)
-        integer,  intent(in) :: nx, nxi, grid_type
-        real(dp), intent(in) :: xi_array(nxi)
-        call make_kernels(nx, nxi, xi_array, grid_type)
+        !integer,  intent(in) :: nx, nxi, grid_type
+        !real(dp), intent(in) :: xi_array(nxi)
+        call make_kernels()!nx, nxi, xi_array, grid_type)
     end subroutine make_kernels_wrap
 
     subroutine make_matrices_wrap(nQ2, Q2_array, l_nlo)
@@ -49,7 +69,10 @@ module dummy
         integer,  intent(in) :: nQ2
         real(dp), intent(in) :: Q2_array(nQ2)
         logical,  intent(in) :: l_nlo
-        call make_matrices(nQ2, Q2_array, l_nlo)
+        print *, "Flag M"
+        print *, nQ2
+        print *, Q2_array
+        call make_evolution_matrices(nQ2, l_nlo)
     end subroutine make_matrices_wrap
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -195,22 +218,24 @@ module dummy
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! Wilson coefficient matrices
 
-    subroutine dvcs_cq_wrap(nx, nxi, nQ2, l_nlo, C)
-        integer,  parameter   :: dp = kind(1d0)
-        integer,  intent(in)  :: nx, nxi, nQ2
-        logical,  intent(in)  :: l_nlo
-        complex(dp), intent(out) :: C(nxi, nx, nQ2)
-        !
-        C = Cq_dvcs(nxi, nx, nQ2, l_nlo)
-    end subroutine dvcs_cq_wrap
+    ! TODO: add back later
 
-    subroutine dvcs_cg_wrap(nx, nxi, nQ2, l_nlo, C)
-        integer,  parameter   :: dp = kind(1d0)
-        integer,  intent(in)  :: nx, nxi, nQ2
-        logical,  intent(in)  :: l_nlo
-        complex(dp), intent(out) :: C(nxi, nx, nQ2)
-        !
-        C = CG_dvcs(nxi, nx, nQ2, l_nlo)
-    end subroutine dvcs_cg_wrap
+    !subroutine dvcs_cq_wrap(nx, nxi, nQ2, l_nlo, C)
+    !    integer,  parameter   :: dp = kind(1d0)
+    !    integer,  intent(in)  :: nx, nxi, nQ2
+    !    logical,  intent(in)  :: l_nlo
+    !    complex(dp), intent(out) :: C(nxi, nx, nQ2)
+    !    !
+    !    C = Cq_dvcs(nxi, nx, nQ2, l_nlo)
+    !end subroutine dvcs_cq_wrap
+
+    !subroutine dvcs_cg_wrap(nx, nxi, nQ2, l_nlo, C)
+    !    integer,  parameter   :: dp = kind(1d0)
+    !    integer,  intent(in)  :: nx, nxi, nQ2
+    !    logical,  intent(in)  :: l_nlo
+    !    complex(dp), intent(out) :: C(nxi, nx, nQ2)
+    !    !
+    !    C = CG_dvcs(nxi, nx, nQ2, l_nlo)
+    !end subroutine dvcs_cg_wrap
 
 end module dummy

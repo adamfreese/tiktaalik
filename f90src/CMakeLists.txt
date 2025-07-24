@@ -31,7 +31,7 @@ set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/include
 # Add all subdirectories
 add_subdirectory(evolution)
 add_subdirectory(helpers)
-add_subdirectory(kernels)
+add_subdirectory(matrices)
 add_subdirectory(model)
 add_subdirectory(qcd)
 add_subdirectory(wilson)

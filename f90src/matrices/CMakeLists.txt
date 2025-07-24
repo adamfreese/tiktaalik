@@ -1,8 +1,8 @@
 set(localfiles
-  "convolution"
-  "kernels_common"
-  "kernels_lo"
-  "kernels_nlo"
+  #"matevo"
+  "matrices_common"
+  "matrices_evolution"
+  "matrices_wilson"
   )
 
 set(localsources ${localfiles})

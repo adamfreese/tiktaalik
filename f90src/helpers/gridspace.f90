@@ -13,9 +13,26 @@ module gridspace
   real(dp), parameter :: lambda = 6.0_dp
 
   public :: linspace, geomspace, tanhspace, &
-      & push_forward, pull_back, push_jacob
+      & push_forward, pull_back, push_jacob, &
+      & pixelspace
 
   contains
+
+    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ! Routine for an x-grid, given a xi-grid
+
+    function pixelspace(nx, nxi, xi_array, grid_type) result(x_grid)
+        integer,  intent(in) :: nx, nxi, grid_type
+        real(dp), intent(in) :: xi_array(nxi)
+        real(dp) :: x_grid(nx, nxi)
+        !
+        integer ix, ixi
+        do ix =1, nx,  1
+        do ixi=1, nxi, 1
+          x_grid(ix,ixi) = push_forward(real(2*ix-1)/real(nx) - 1.0_dp, xi_array(nxi), nx, grid_type)
+        end do
+        end do
+    end function pixelspace
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! Conversion between linear eta space and x space
