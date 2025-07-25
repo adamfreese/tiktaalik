@@ -1,5 +1,8 @@
 set(localfiles
   "gk"
+  "gk_analytic"
+  "gk_smol"
+  "gk_zero"
   )
 
 set(localsources ${localfiles})
