@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 set(localfiles
   "continuum_evolution"
+  "continuum_wilson"
   "kvlo4tests"
   )
 

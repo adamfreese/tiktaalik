@@ -1,4 +1,4 @@
-! ns_evolution.f90
+! continuum_evolution.f90
 !
 ! by Adam Freese
 ! part of the package tiktaalik for GPD evolution
@@ -6,8 +6,8 @@
 ! Created on May 24, 2024.
 
 module continuum_evolution
-  use integration,   only: adaptive_integrate
   use alpha_qcd,     only: get_alpha_QCD, get_neff
+  use integration,   only: adaptive_integrate
   use kernels_common
   use kvlo4tests
 
@@ -24,7 +24,7 @@ module continuum_evolution
     ! Public methods for testing
 
     function continuum_shift_QQ(func, x, xi, Q2, nlo, i_ns_type) result(shift)
-        real(dp), external :: func
+        real(dp), external   :: func
         real(dp), intent(in) :: x, xi, Q2
         logical,  intent(in) :: nlo
         integer,  intent(in) :: i_ns_type
@@ -48,7 +48,7 @@ module continuum_evolution
     end function continuum_shift_QQ
 
     function continuum_shift_QG(func, x, xi, Q2, nlo) result(shift)
-        real(dp), external :: func
+        real(dp), external   :: func
         real(dp), intent(in) :: x, xi, Q2
         logical,  intent(in) :: nlo
         real(dp) :: shift

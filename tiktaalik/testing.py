@@ -22,6 +22,21 @@ def interpixel(x, xi=0.5, grid_type=1, n_pixels=20, i_pixel=10):
     return y
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Continuum CFFs
+
+def test_cff_q(xi, Q2, nlo=False):
+    if(np.isscalar(xi)):
+        xi = np.array([xi])
+    V = f90src.test_cff_q(xi,Q2,nlo)
+    return V
+
+def test_cff_g(xi, Q2, nlo=False):
+    if(np.isscalar(xi)):
+        xi = np.array([xi])
+    V = f90src.test_cff_g(xi,Q2,nlo)
+    return V
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Continuum shifts
 
 def test_shift_cNS(x, xi, Q2, nlo=False, nstype=1):

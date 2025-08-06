@@ -11,8 +11,9 @@
 
 module dummy
   use continuum_evolution
-  use pixelation
+  use continuum_wilson
   use gk
+  use pixelation
 
   implicit none
   public
@@ -29,11 +30,60 @@ module dummy
         real(dp), intent(out) :: y(nx)
         !
         integer :: ix
-        call initialize_lagrange_weights(n_pixels, 6)
+        !call initialize_lagrange_weights(n_pixels, 6)
         do ix=1, nx, 1
           y(ix) = interpixel(n_pixels, i_pixel, x(ix), xi, grid_type)
         end do
     end subroutine interpixel_wrap
+
+    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ! Test CFFs
+
+    subroutine test_cff_q(nxi, xi, Q2, nlo, v)
+        ! Test how the shift operates on a proxy function
+        integer,  parameter   :: dp = kind(1d0)
+        integer,  intent(in)  :: nxi
+        real(dp), intent(in)  :: xi(nxi), Q2
+        logical,  intent(in)  :: nlo
+        complex(dp), intent(out) :: v(nxi)
+        !
+        integer :: ixi
+        !$OMP PARALLEL DO
+        do ixi=1, nxi, 1
+          v(ixi) = continuum_cff_q(proxy_function, xi(ixi), Q2, nlo)
+        end do
+        !$OMP END PARALLEL DO
+        contains
+          function proxy_function(z) result(f)
+              real(dp), intent(in) :: z
+              real(dp) :: f
+              f = 4./9.*(Hu(z, xi(ixi), 0.0_dp) - Hu(-z, xi(ixi), 0.0_dp)) &
+              & + 1./9.*(Hd(z, xi(ixi), 0.0_dp) - Hd(-z, xi(ixi), 0.0_dp)) &
+              & + 1./9.*(Hs(z, xi(ixi), 0.0_dp) - Hs(-z, xi(ixi), 0.0_dp))
+          end function proxy_function
+    end subroutine test_cff_q
+
+    subroutine test_cff_g(nxi, xi, Q2, nlo, v)
+        ! Test how the shift operates on a proxy function
+        integer,  parameter   :: dp = kind(1d0)
+        integer,  intent(in)  :: nxi
+        real(dp), intent(in)  :: xi(nxi), Q2
+        logical,  intent(in)  :: nlo
+        complex(dp), intent(out) :: v(nxi)
+        !
+        integer :: ixi
+        !$OMP PARALLEL DO
+        do ixi=1, nxi, 1
+          v(ixi) = continuum_cff_g(proxy_function, xi(ixi), Q2, nlo)
+        end do
+        !$OMP END PARALLEL DO
+        contains
+          function proxy_function(z) result(f)
+              real(dp), intent(in) :: z
+              real(dp) :: f
+              f = Hg(z, xi(ixi), 0.0_dp)
+          end function proxy_function
+    end subroutine test_cff_g
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! Test shifts

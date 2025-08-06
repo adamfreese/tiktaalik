@@ -42,6 +42,57 @@ def shift_benchmark(key='NS', xi=0.5, nx=40, nlo=False, ns_type=1, grid_type=1):
     bm.finish()
     return
 
+def wilson_benchmark(
+        key='q',
+        #xi = np.linspace(0.1, 0.9, 91),
+        xi = np.geomspace(1e-6, 1, 91),
+        nx = 100,
+        t = 0,
+        grid_type = 2,
+        nlo = False,
+        order = 5
+        ):
+    # Set the grids
+    tk.matrices.set_Q2_grid(np.array([4,5]))
+    tk.matrices.set_x_xi_grids(nx, xi, grid_type, lagrange_order=order)
+    # Retrieve x grid
+    x = tk.matrices.get_x_grid()
+    # Retrieve coefficient matrices (interpixel method)
+    C0 = tk.matrices.dvcs_Cq(nlo=False)[:,:,0]
+    C1 = tk.matrices.dvcs_Cq(nlo=True )[:,:,0]
+    Cg = tk.matrices.dvcs_Cg(nlo=True )[:,:,0]
+    # Pixel CFF
+    Hq = dvcs_quark_combo(x, xi, t)
+    cff_pixel = np.einsum('ij,ji...->i...', C0, Hq)[:,0]
+    # True CFF?
+    cff_truth = tk.testing.test_cff_q(xi, 4, nlo=False)
+    print(cff_pixel.shape)
+    print(cff_truth.shape)
+    # Set up plot
+    nrows, ncols = 1, 1
+    fig = py.figure(figsize=(ncols*8,nrows*6),layout='constrained')
+    ax1 = py.subplot(nrows,ncols,1)
+    ax1.plot(xi, xi*np.real(cff_truth), '-', label=r'Truth     (real)')
+    ax1.plot(xi, xi*np.real(cff_pixel), '+', label=r'tiktaalik (real)')
+    ax1.plot(xi, xi*np.imag(cff_truth), '-', label=r'Truth     (imag)')
+    ax1.plot(xi, xi*np.imag(cff_pixel), '+', label=r'tiktaalik (imag)')
+    ax1.set_xscale('log')
+    ax1.set_xlabel(r'$\xi$')
+    _ = ax1.legend(prop = { 'size' : 17 }, loc=1)
+    fig.savefig('derp.pdf')
+    fig.savefig('derp.png')
+    return
+
+def dvcs_quark_combo(x, xi, t):
+    H = (
+            4/9*(tk.model.Hu(x,xi,t) - tk.model.Hu(-x,xi,t))
+            +
+            1/9*(tk.model.Hd(x,xi,t) - tk.model.Hd(-x,xi,t))
+            +
+            1/9*(tk.model.Hs(x,xi,t) - tk.model.Hs(-x,xi,t))
+            )
+    return H
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Auxiliary functions
 
