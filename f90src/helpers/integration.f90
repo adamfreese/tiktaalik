@@ -6,7 +6,7 @@ module integration
 
   integer,  parameter :: dp = kind(1d0)
 
-  public :: integrate, integrate2, adaptive_integrate
+  public :: integrate, integrate2, adaptive_integrate, adaptive_integrate2
 
   contains
 
@@ -99,6 +99,19 @@ module integration
           integral = integral + iqags(func,  abs(xi)+eps, ymax)
         endif
     end function adaptive_integrate
+
+    function adaptive_integrate2(func, xi) result(integral)
+        real(dp), external :: func
+        real(dp), intent(in) :: xi
+        real(dp) :: integral
+        !
+        real(dp), parameter :: eps  =  0.0_dp
+        integral = 0.0_dp
+        ! Break into three regions
+        integral = integral + iqags(func, -1.0_dp + eps, -xi     - eps)
+        integral = integral + iqags(func, -xi     + eps,  xi     - eps)
+        integral = integral + iqags(func,  xi     + eps,  1.0_dp - eps)
+    end function adaptive_integrate2
 
     subroutine swap(x,y)
         real(dp), intent(inout) :: x, y
