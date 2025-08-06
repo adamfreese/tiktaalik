@@ -31,6 +31,7 @@ module gk
 
   integer,  parameter, private :: dp = kind(1d0)
   real(dp), parameter, private :: pi = acos(-1.0_dp)
+  real(dp), parameter, private :: eps = 1e-12_dp
 
   ! Valence
   real(dp), parameter, private :: a0_val = 0.48_dp
@@ -142,8 +143,11 @@ module gk
         real(dp) :: H
         !
         if(xi < 0.01*abs(x)) then
-          !H = H_n1_smol(x, xi, t, C, delta, ap)
           H = H_n1_zero(x, t, C, delta, ap)
+        elseif( abs(x - xi) < eps) then
+          H = H_n1_analytic(xi+eps, xi, t, C, delta, ap)
+        elseif( abs(x + xi) < eps) then
+          H = H_n1_analytic(-xi-eps, xi, t, C, delta, ap)
         else
           H = H_n1_analytic(x, xi, t, C, delta, ap)
         endif
@@ -154,8 +158,11 @@ module gk
         real(dp) :: H
         !
         if(xi < 0.01*abs(x)) then
-          !H = H_n2_smol(x, xi, t, C, delta, ap, sgn)
           H = H_n2_zero(x, t, C, delta, ap, sgn)
+        elseif( abs(x - xi) < eps) then
+          H = H_n2_analytic(xi+eps, xi, t, C, delta, ap, sgn)
+        elseif( abs(x + xi) < eps) then
+          H = H_n2_analytic(-xi-eps, xi, t, C, delta, ap, sgn)
         else
           H = H_n2_analytic(x, xi, t, C, delta, ap, sgn)
         endif
