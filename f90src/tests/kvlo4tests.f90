@@ -29,7 +29,8 @@ module kvlo4tests
       & KV0_QG_reg, KV0_GQ_reg, &
       & KV0_GG_reg, KV0_GG_pls, KV0_GG_cst, &
       & tKV1_QQ_reg, tKV1_NSp_pls, tKV1_NSp_cst, tKV1_NSm_pls, tKV1_NSm_cst, &
-      & tKV1_QG_reg, tKV1_GQ_reg, tKV1_GG_pls, tKV1_GG_cst
+      & tKV1_QG_reg, tKV1_GQ_reg, tKV1_GG_pls, tKV1_GG_cst, &
+      & KV0_QG_cst ! NEW
 
   contains
 
@@ -98,6 +99,15 @@ module kvlo4tests
         !
         K = real(nfl) * ( KA0_qG_reg(x, y, xi) + KVmA0_qG_reg(x, y, xi) )
     end function KV0_QG_reg
+
+    function KV0_QG_cst(x, xi) result(K)
+        ! NOTICE:
+        ! Assumes nfl=4
+        real(dp), intent(in) :: x, xi
+        real(dp) :: K
+        !
+        K = real(nfl) * KA0_qG_cst(x, xi)
+    end function KV0_QG_cst
 
     ! NLO
 

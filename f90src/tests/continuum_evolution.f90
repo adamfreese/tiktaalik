@@ -55,7 +55,7 @@ module continuum_evolution
         !
         real(dp) :: S1, S2, al2pi
         al2pi = get_alpha_QCD(Q2) / (2.*pi)
-        S1 = convolve(func, KV0_QG_reg, zero_func, zero_func, x, xi)
+        S1 = convolve(func, KV0_QG_reg, zero_func, KV0_QG_cst, x, xi)
         S2 = 0.0_dp
         if(nlo) then
           S2 = convolve(func, tKV1_QG_reg, zero_func, zero_func, x, xi)

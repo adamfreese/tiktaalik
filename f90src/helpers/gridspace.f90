@@ -29,7 +29,7 @@ module gridspace
         integer ix, ixi
         do ix =1, nx,  1
         do ixi=1, nxi, 1
-          x_grid(ix,ixi) = push_forward(real(2*ix-1)/real(nx) - 1.0_dp, xi_array(ixi), nx, grid_type)
+          x_grid(ix,ixi) = push_forward(2.*real(ix-1)/real(nx-1) - 1.0_dp, xi_array(ixi), nx, grid_type)
         end do
         end do
     end function pixelspace

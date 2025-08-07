@@ -337,7 +337,7 @@ module matrices_evolution
         do ix=1, nx, 1
           do iy=1, nx, 1
             do iz=1, nxi, 1
-              qG_nfl_1(ix,iy,iz) = pixel_conv(KA0_qG_reg, zero_func,  zero_func,  xi(iz), nx, ix, iy, grid_type)
+              qG_nfl_1(ix,iy,iz) = pixel_conv(KA0_qG_reg, zero_func,  KA0_qG_cst, xi(iz), nx, ix, iy, grid_type)
               Gq_nfl_0(ix,iy,iz) = pixel_conv(KA0_Gq_reg, zero_func,  zero_func,  xi(iz), nx, ix, iy, grid_type)
               GG_nfl_0(ix,iy,iz) = pixel_conv(zero_func,  KA0_GG_pls, KA0_GG_cst, xi(iz), nx, ix, iy, grid_type)
               GG_nfl_1(ix,iy,iz) = pixel_conv(zero_func,  zero_func,  KA0_GG_nfl, xi(iz), nx, ix, iy, grid_type)

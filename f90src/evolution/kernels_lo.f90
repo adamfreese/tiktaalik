@@ -37,7 +37,8 @@ module kernels_lo
 
   public :: K0_qq_pls, K0_qq_cst, &
       & KA0_qG_reg, KA0_Gq_reg, KVmA0_qG_reg, KVmA0_Gq_reg, &
-      & KA0_GG_pls, KA0_GG_cst, KA0_GG_nfl, KVmA0_GG_reg
+      & KA0_GG_pls, KA0_GG_cst, KA0_GG_nfl, KVmA0_GG_reg, &
+      & KA0_qG_cst ! NEW
 
   contains
 
@@ -70,6 +71,10 @@ module kernels_lo
           K = 1.5 + log((1.-x**2)/(1.+xi)) + 0.5*((x-xi)*log(xi-x) - (x+xi)*log(x+xi))/xi
         elseif(x < -xi) then
           K = 1.5 + 2.*log(1.+x) + 0.5*((-x-xi)*log((-x-xi)*(1.+xi)) - (-x+xi)*log((-x+xi)*(1.-xi)))/xi
+        elseif(x==xi) then
+          K = 1.5 + 2.*log(1.-x) - 0.5*(x+xi)*log((x+xi)*(1.-xi))/xi
+        elseif(x==-xi) then
+          K = 1.5 + 2.*log(1.+x)  - 0.5*(-x+xi)*log((-x+xi)*(1.-xi))/xi
         else
           K = 0.0_dp
         endif
@@ -93,6 +98,12 @@ module kernels_lo
         Y2 = 0.5*(1.-y/xi)
         ! Eqs. (74), (75)
         K = - qG_f_a(X1,Y1)*rho_step(X1,Y1) + qG_f_a(X2,Y2)*rho_step(X2,Y2)
+        !if(X1==0.0_dp) then
+        !  print *, "Flag X1", qG_f_a(X1,Y1), rho_step(X1,Y1)
+        !endif
+        !if(X2==0.0_dp) then
+        !  print *, "Flag X2", qG_f_a(X2,Y2), rho_step(X2,Y2)
+        !endif
         K = 2.*TF*0.5*K/xi
         K = K / (2.*xi) ! Eq. (15) of BFM
     end function KA0_qG_reg
@@ -114,6 +125,24 @@ module kernels_lo
         K = 2.*TF*0.5*K/xi
         K = K / (2.*xi) ! Eq. (15) of BFM
     end function KVmA0_qG_reg
+
+    function KA0_qG_cst(x, xi) result(K)
+        ! NOTICE:
+        ! There's a missing factor nfl here.
+        ! The kernel should be multplied by nfl from outside.
+        real(dp), intent(in) :: x, xi
+        real(dp) :: K
+        !
+        if(x==xi) then
+          K = 2.*xi
+        elseif(x==-xi) then
+          K = -2.*xi
+        else
+          K = 0.0_dp
+        endif
+        K = 2.*TF*0.5*K/xi
+        K = K / (2.*xi) ! Eq. (15) of BFM
+    end function KA0_qG_cst
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! Gq kernel pieces

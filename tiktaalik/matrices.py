@@ -75,7 +75,7 @@ def set_x_xi_grids(nx, xi, grid_type, lagrange_order=5):
     # TODO: docstring
     ''' TODO: dicstring '''
     # Assert requirements
-    assert(nx==(nx//2)*2)
+    #assert(nx==(nx//2)*2)
     assert(nx>=6)
     # Cache the data sent by the user
     matrix_dict['nx']  = nx

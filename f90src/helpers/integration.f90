@@ -24,6 +24,8 @@ module integration
         !
         real(dp) :: aa(7), ii(6), abserr(6), resabs(6), resasc(6)
         integer :: i
+        real(dp), parameter :: eps = 1e-6_dp
+        ii = 0.
         aa(1) = pull_back( -1.0_dp, xi, n_pixels, grid_type)
         aa(2) = pull_back( -abs(x), xi, n_pixels, grid_type)
         aa(3) = pull_back(-abs(xi), xi, n_pixels, grid_type)
@@ -34,7 +36,9 @@ module integration
         if(aa(3) < aa(2)) call swap(aa(2),aa(3))
         if(aa(6) < aa(5)) call swap(aa(5),aa(6))
         do i=1, 6, 1
-          call qk21(pulled_back_func, aa(i), aa(i+1), ii(i), abserr(i), resabs(i), resasc(i))
+          if(aa(i+1) > aa(i)) then
+            call qk21(pulled_back_func, aa(i), aa(i+1), ii(i), abserr(i), resabs(i), resasc(i))
+          endif
         end do
         integral = sum(ii)
         return
@@ -87,7 +91,7 @@ module integration
         real(dp), parameter :: ymax =  1.0_dp - eps
         integral = 0.0_dp
         ! Break into 3 or 5 sub-regisions, depending on DGLAP or ERBL
-        if(abs(x) > abs(xi)) then
+        if(abs(x) >= abs(xi)) then
           integral = integral + iqags(func,  ymin,       -abs(x) -eps)
           integral = integral + iqags(func, -abs(x) +eps, abs(x) -eps)
           integral = integral + iqags(func,  abs(x) +eps, ymax)

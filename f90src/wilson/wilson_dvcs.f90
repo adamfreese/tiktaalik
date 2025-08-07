@@ -208,7 +208,7 @@ module wilson_dvcs
               real(dp) :: intd
               !
               real(dp) :: fx
-              fx = interpixel(n_pixels, i, x, xi, grid_type)
+              fx = interpixel(n_pixels, i-1, x, xi, grid_type)
               intd = kernel(x,xi)*fx
           end function integrand
     end function pixel_coef_reg
@@ -227,8 +227,8 @@ module wilson_dvcs
               real(dp) :: intd
               !
               real(dp) :: fx, fxi
-              fx  = interpixel(n_pixels, i,  x, xi, grid_type)
-              fxi = interpixel(n_pixels, i, xi, xi, grid_type)
+              fx  = interpixel(n_pixels, i-1,  x, xi, grid_type)
+              fxi = interpixel(n_pixels, i-1, xi, xi, grid_type)
               intd = kernel(x,xi)*(fx-fxi)
           end function integrand
     end function pixel_coef_sub
@@ -240,7 +240,7 @@ module wilson_dvcs
         real(dp) :: shift
         !
         real(dp) :: fxi
-        fxi = interpixel(n_pixels, i, xi, xi, grid_type)
+        fxi = interpixel(n_pixels, i-1, xi, xi, grid_type)
         shift = kernel(xi) * fxi
     end function pixel_coef_cst
 
