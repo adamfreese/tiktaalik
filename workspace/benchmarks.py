@@ -34,9 +34,14 @@ def shift_benchmark(key='NS', xi=0.5, nx=40, nlo=False, ns_type=1, grid_type=1):
             )
     tk.matrices.initialize_kernels(nx, xi, grid_type=grid_type)
     K  = get_kernel(key=key, ns_type=ns_type, nlo=nlo)
-    x = tk.matrices.pixelspace(nx, xi=xi, grid_type=grid_type)
+    #x = tk.matrices.pixelspace(nx, xi=xi, grid_type=grid_type)
+    x = tk.matrices.get_x_grid()[:,0]
+    print(x.shape)
+    print(x)
     H0 = gpd_key(x, xi=xi, key=key)
     dH = np.einsum('ij,j->i', K[:,:,0], H0)
+    print(H0)
+    print(dH)
     bm.plot_data(x, dH, label=r'tiktaalik')
     # Finish
     bm.finish()
@@ -45,8 +50,8 @@ def shift_benchmark(key='NS', xi=0.5, nx=40, nlo=False, ns_type=1, grid_type=1):
 def wilson_benchmark(
         key='q',
         #xi = np.linspace(0.1, 0.9, 91),
-        xi = np.geomspace(1e-6, 1, 91),
-        nx = 100,
+        xi = np.geomspace(1e-4, 1, 100),
+        nx = 101,
         t = 0,
         grid_type = 2,
         nlo = False,
@@ -69,15 +74,30 @@ def wilson_benchmark(
     print(cff_pixel.shape)
     print(cff_truth.shape)
     # Set up plot
-    nrows, ncols = 1, 1
-    fig = py.figure(figsize=(ncols*8,nrows*6),layout='constrained')
-    ax1 = py.subplot(nrows,ncols,1)
-    ax1.plot(xi, xi*np.real(cff_truth), '-', label=r'Truth     (real)')
-    ax1.plot(xi, xi*np.real(cff_pixel), '+', label=r'tiktaalik (real)')
-    ax1.plot(xi, xi*np.imag(cff_truth), '-', label=r'Truth     (imag)')
-    ax1.plot(xi, xi*np.imag(cff_pixel), '+', label=r'tiktaalik (imag)')
-    ax1.set_xscale('log')
-    ax1.set_xlabel(r'$\xi$')
+    nrows, ncols = 2, 1
+    #fig = py.figure(figsize=(ncols*8,nrows*6),layout='constrained')
+    #ax1 = py.subplot(nrows,ncols,1)
+    fig, (ax1, ax2) = py.subplots(
+            nrows, ncols,
+            gridspec_kw={'height_ratios': [3,1]},
+            figsize=(8,8),
+            layout = 'constrained'
+            )
+    ax1.plot(xi, xi*np.real(cff_truth), '-',  label=r'Truth     (real)', color='xkcd:electric blue')
+    ax1.plot(xi, xi*np.real(cff_pixel), '+',  label=r'tiktaalik (real)', color='xkcd:forest green')
+    ax1.plot(xi, xi*np.imag(cff_truth), '--', label=r'Truth     (imag)', color='xkcd:ochre')
+    ax1.plot(xi, xi*np.imag(cff_pixel), 'x',  label=r'tiktaalik (imag)', color='xkcd:rich purple')
+    # Error
+    ImErr = 100*np.imag(cff_truth-cff_pixel) / np.imag(cff_truth)
+    ReErr = 100*np.real(cff_truth-cff_pixel) / np.real(cff_truth)
+    ax2.plot(xi, ReErr, '+', label=r'Error (real)', color='xkcd:forest green')
+    ax2.plot(xi, ImErr, 'x', label=r'Error (imag)', color='xkcd:rich purple')
+    # Finish
+    for ax in [ax1, ax2]:
+        ax.set_xscale('log')
+    ax2.set_xlabel(r'$\xi$')
+    ax1.set_ylabel(r'$\mathcal{H}(\xi)$')
+    ax2.set_ylabel(r'percent error')
     _ = ax1.legend(prop = { 'size' : 17 }, loc=1)
     fig.savefig('derp.pdf')
     fig.savefig('derp.png')
@@ -147,12 +167,12 @@ def gpd_key(x, xi=0.5, key='NS'):
     H[np.isnan(H)] = 0
     H[np.isinf(H)] = 0
     # May need to interpolate to fix x=xi and x=-xi if using Marco's grid
-    xidist = np.min(abs(x-xi))
-    if(xidist < 1e-6):
-        iA = (np.abs(x+xi)).argmin()
-        iB = (np.abs(x-xi)).argmin()
-        H[iA] = 0.5*(H[iA-1] + H[iA+1])
-        H[iB] = 0.5*(H[iB-1] + H[iB+1])
+    #xidist = np.min(abs(x-xi))
+    #if(xidist < 1e-6):
+    #    iA = (np.abs(x+xi)).argmin()
+    #    iB = (np.abs(x-xi)).argmin()
+    #    H[iA] = 0.5*(H[iA-1] + H[iA+1])
+    #    H[iB] = 0.5*(H[iB-1] + H[iB+1])
     return H
 
 def ns_gpd(x, xi):
@@ -212,7 +232,7 @@ class bmplot:
 
     def plot_gt(self):
         # Hmm
-        N = 60
+        N = 300
         x1 = np.geomspace(      -1, -self.xi, N)
         x2 = np.linspace( -self.xi,  self.xi, N)
         x3 = np.geomspace( self.xi,        1, N)
@@ -255,7 +275,7 @@ class bmplot:
         # Log scale for error plot
         self.ax2.set_yscale('log')
         self.ax2.yaxis.get_major_locator().numticks = 3
-        ##self.ax2.set_ylim((1e-6,1e3))
+        self.ax2.set_ylim((1e-6,1e3))
         ymin, ymax = self.ax2.get_ylim()
         if(ymax > 1e3):
             self.ax2.set_ylim((ymin,1e3))
