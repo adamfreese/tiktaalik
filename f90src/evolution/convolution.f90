@@ -30,6 +30,7 @@ module convolution
         real(dp) :: shift
         !
         shift = 0.0_dp
+        if(i==1 .or. i==N) return
         shift = shift + pixel_conv_reg(Kreg, xi, N, i, j, grid_type)
         shift = shift + pixel_conv_pls(Kpls, xi, N, i, j, grid_type)
         shift = shift + pixel_conv_cst(Kcst, xi, N, i, j, grid_type)
