@@ -34,14 +34,9 @@ def shift_benchmark(key='NS', xi=0.5, nx=40, nlo=False, ns_type=1, grid_type=1):
             )
     tk.matrices.initialize_kernels(nx, xi, grid_type=grid_type)
     K  = get_kernel(key=key, ns_type=ns_type, nlo=nlo)
-    #x = tk.matrices.pixelspace(nx, xi=xi, grid_type=grid_type)
     x = tk.matrices.get_x_grid()[:,0]
-    print(x.shape)
-    print(x)
     H0 = gpd_key(x, xi=xi, key=key)
     dH = np.einsum('ij,j->i', K[:,:,0], H0)
-    print(H0)
-    print(dH)
     bm.plot_data(x, dH, label=r'tiktaalik')
     # Finish
     bm.finish()
@@ -88,8 +83,8 @@ def wilson_benchmark(
     ax1.plot(xi, xi*np.imag(cff_truth), '--', label=r'Truth     (imag)', color='xkcd:ochre')
     ax1.plot(xi, xi*np.imag(cff_pixel), 'x',  label=r'tiktaalik (imag)', color='xkcd:rich purple')
     # Error
-    ImErr = 100*np.imag(cff_truth-cff_pixel) / np.imag(cff_truth)
-    ReErr = 100*np.real(cff_truth-cff_pixel) / np.real(cff_truth)
+    ImErr = 100*abs(np.imag(cff_truth-cff_pixel) / np.imag(cff_truth))
+    ReErr = 100*abs(np.real(cff_truth-cff_pixel) / np.real(cff_truth))
     ax2.plot(xi, ReErr, '+', label=r'Error (real)', color='xkcd:forest green')
     ax2.plot(xi, ImErr, 'x', label=r'Error (imag)', color='xkcd:rich purple')
     # Finish
@@ -232,11 +227,11 @@ class bmplot:
 
     def plot_gt(self):
         # Hmm
-        N = 300
+        N = 200
         x1 = np.geomspace(      -1, -self.xi, N)
         x2 = np.linspace( -self.xi,  self.xi, N)
         x3 = np.geomspace( self.xi,        1, N)
-        x = np.concatenate((x1[:N-1], x2[1:N-1], x3[1:]))
+        x = np.concatenate((x1[:N-1], x2[0:N], x3[1:]))
         H = self.gt_fun(x)
         self.ax1.plot(x, H, '-', color='xkcd:forest green', linewidth=2, label=r'Ground truth')
         if(self.inlay):
