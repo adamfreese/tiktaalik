@@ -37,7 +37,17 @@ module integration
         if(aa(6) < aa(5)) call swap(aa(5),aa(6))
         do i=1, 6, 1
           if(aa(i+1) > aa(i)) then
-            call qk21(pulled_back_func, aa(i), aa(i+1), ii(i), abserr(i), resabs(i), resasc(i))
+            ! Right now a compromise.
+            ! At x=xi and x=-xi, the fixed quad doesn't do well for NLO qg.
+            ! But adaptive is slow.
+            ! So only for the boundary points, use adaptive quadrature,
+            ! at least until I make the NLO qg kernel behave better.
+            ! TODO
+            if(abs(x)==abs(xi)) then
+              ii(i) = iqags(pulled_back_func, aa(i), aa(i+1))
+            else
+              call qk21(pulled_back_func, aa(i), aa(i+1), ii(i), abserr(i), resabs(i), resasc(i))
+            endif
           endif
         end do
         integral = sum(ii)
