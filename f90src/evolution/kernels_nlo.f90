@@ -28,6 +28,7 @@ module kernels_nlo
   private
 
   integer,  parameter, private :: dp = kind(1d0)
+  real(dp), parameter, private :: epsilon = 1e-6_dp
 
   public :: KV1_NSp_pls, KV1_NSp_cst, KV1_NSp_pls_nfl, KV1_NSp_cst_nfl, &
       & KV1_NSm_pls, KV1_NSm_cst, KV1_NSm_pls_nfl, KV1_NSm_cst_nfl, &
@@ -63,17 +64,25 @@ module kernels_nlo
         real(dp), intent(in) :: x, xi
         real(dp) :: K
         !
+        real(dp) :: x_
         ! Explicit term in Eq. (177)
         K = CF*(CF - 0.5*CA)*(6.5-6.*zeta2+4.*zeta3)
+        ! Hack fix (TODO clean up!)
+        x_ = x
+        if(x==xi .or. x==-xi) then
+          x_ = x - sign(1.0_dp,x)*epsilon
+        elseif(x==0.0_dp) then
+          x_ = epsilon ! just go positive I guess
+        endif
         ! From plus prescription
-        K = K + adaptive_integrate(integrand, x, xi)
+        K = K + adaptive_integrate(integrand, x_, xi)
         return
         contains
           function integrand(y) result(intd)
               real(dp), intent(in) :: y
               real(dp) :: intd
               !
-              intd = KV1_NSp_pls(x,y,xi) - KV1_NSp_pls(y,x,xi)
+              intd = KV1_NSp_pls(x_,y,xi) - KV1_NSp_pls(y,x_,xi)
           end function integrand
     end function KV1_NSp_cst
 
@@ -98,15 +107,23 @@ module kernels_nlo
         real(dp), intent(in) :: x, xi
         real(dp) :: K
         !
+        ! Hack fix (TODO clean up!)
+        real(dp) :: x_
+        x_ = x
+        if(x==xi .or. x==-xi) then
+          x_ = x - sign(1.0_dp,x)*epsilon
+        elseif(x==0.0_dp) then
+          x_ = epsilon ! just go positive I guess
+        endif
         ! Constant only from plus prescription
-        K = adaptive_integrate(integrand, x, xi)
+        K = adaptive_integrate(integrand, x_, xi)
         return
         contains
           function integrand(y) result(intd)
               real(dp), intent(in) :: y
               real(dp) :: intd
               !
-              intd = KV1_NSm_pls(x,y,xi) - KV1_NSm_pls(y,x,xi)
+              intd = KV1_NSm_pls(x_,y,xi) - KV1_NSm_pls(y,x_,xi)
           end function integrand
     end function KV1_NSm_cst
 
@@ -165,15 +182,23 @@ module kernels_nlo
         real(dp), intent(in) :: x, xi
         real(dp) :: K
         !
+        real(dp) :: x_
+        ! Hack fix (TODO clean up!)
+        x_ = x
+        if(x==xi .or. x==-xi) then
+          x_ = x - sign(1.0_dp,x)*epsilon
+        elseif(x==0.0_dp) then
+          x_ = epsilon ! just go positive I guess
+        endif
         ! From plus prescription
-        K = adaptive_integrate(integrand, x, xi)
+        K = adaptive_integrate(integrand, x_, xi)
         return
         contains
           function integrand(y) result(intd)
               real(dp), intent(in) :: y
               real(dp) :: intd
               !
-              intd = KV1_NSp_pls_nfl(x,y,xi) - KV1_NSp_pls_nfl(y,x,xi)
+              intd = KV1_NSp_pls_nfl(x_,y,xi) - KV1_NSp_pls_nfl(y,x_,xi)
           end function integrand
     end function KV1_NSp_cst_nfl
 
@@ -198,15 +223,23 @@ module kernels_nlo
         real(dp), intent(in) :: x, xi
         real(dp) :: K
         !
+        ! Hack fix (TODO clean up!)
+        real(dp) :: x_
+        x_ = x
+        if(x==xi .or. x==-xi) then
+          x_ = x - sign(1.0_dp,x)*epsilon
+        elseif(x==0.0_dp) then
+          x_ = epsilon ! just go positive I guess
+        endif
         ! Constant only from plus prescription
-        K = adaptive_integrate(integrand, x, xi)
+        K = adaptive_integrate(integrand, x_, xi)
         return
         contains
           function integrand(y) result(intd)
               real(dp), intent(in) :: y
               real(dp) :: intd
               !
-              intd = KV1_NSm_pls_nfl(x,y,xi) - KV1_NSm_pls_nfl(y,x,xi)
+              intd = KV1_NSm_pls_nfl(x_,y,xi) - KV1_NSm_pls_nfl(y,x_,xi)
           end function integrand
     end function KV1_NSm_cst_nfl
 
@@ -313,7 +346,14 @@ module kernels_nlo
         X2 = 0.5*(1.-x/xi)
         Y1 = 0.5*(1.+y/xi)
         Y2 = 0.5*(1.-y/xi)
-        K = KV1_qG_half(X1,Y1) - KV1_qG_half(X2,Y2)
+        ! Hack fix (TODO clean up!)
+        if(X1==0.0_dp) then
+          K = KV1_qG_half(-epsilon/xi,Y1) - KV1_qG_half(X2+epsilon/xi,Y2)
+        elseif(X2==0.0_dp) then
+          K = KV1_qG_half(X1+epsilon/xi,Y1) - KV1_qG_half(-epsilon/xi,Y2)
+        else
+          K = KV1_qG_half(X1,Y1) - KV1_qG_half(X2,Y2)
+        endif
         K = 0.5*K/xi
         K = K / (2.*xi) ! Eq. (15) of BFM
     end function KV1_qG_reg
@@ -619,7 +659,7 @@ module kernels_nlo
         ! Formula
         K = -0.5*CF*beta0*( &
             10./3.*GQfV + 2.*X*Xbar/Y + (GQfV+GQfbarV)*abslog(1.-X/Y) &
-            & - GQfA*abslog(x) + GQfbarA*abslog(Xbar) &
+            & - GQfA*abslog(X) + GQfbarA*abslog(Xbar) &
             & )
         ! Factor in the support regions
         K = K*rho_step(X,Y)
@@ -694,15 +734,23 @@ module kernels_nlo
         real(dp), intent(in) :: x, xi
         real(dp) :: K
         !
+        ! Hack fix (TODO clean up!)
+        real(dp) :: x_
+        x_ = x
+        if(x==xi .or. x==-xi) then
+          x_ = x - sign(1.0_dp,x)*epsilon
+        elseif(x==0.0_dp) then
+          x_ = epsilon ! just go positive I guess
+        endif
         ! From plus prescription
-        K = adaptive_integrate(integrand, x, xi)
+        K = adaptive_integrate(integrand, x_, xi)
         return
         contains
           function integrand(y) result(intd)
               real(dp), intent(in) :: y
               real(dp) :: intd
               !
-              intd = KV1_GG_pls(x,y,xi) - KV1_GG_pls(y,x,xi)
+              intd = KV1_GG_pls(x_,y,xi) - KV1_GG_pls(y,x_,xi)
           end function integrand
     end function KV1_GG_cst
 
@@ -773,17 +821,25 @@ module kernels_nlo
         real(dp), intent(in) :: x, xi
         real(dp) :: K
         !
+        ! Hack fix (TODO clean up!)
+        real(dp) :: x_
+        x_ = x
+        if(x==xi .or. x==-xi) then
+          x_ = x - sign(1.0_dp,x)*epsilon
+        elseif(x==0.0_dp) then
+          x_ = epsilon ! just go positive I guess
+        endif
         ! Explicit term in Eqs. (175) and (176)
         K = CA**2*(95./27.-14./3.*zeta2+2.*zeta3)
         ! From plus prescription
-        K = adaptive_integrate(integrand, x, xi)
+        K = adaptive_integrate(integrand, x_, xi)
         return
         contains
           function integrand(y) result(intd)
               real(dp), intent(in) :: y
               real(dp) :: intd
               !
-              intd = KA1_GG_pls(x,y,xi) - KA1_GG_pls(y,x,xi)
+              intd = KA1_GG_pls(x_,y,xi) - KA1_GG_pls(y,x_,xi)
           end function integrand
     end function KA1_GG_cst
 
@@ -854,18 +910,25 @@ module kernels_nlo
         real(dp), intent(in) :: x, xi
         real(dp) :: K
         !
+        ! Hack fix (TODO clean up!)
+        real(dp) :: x_
+        x_ = x
+        if(x==xi .or. x==-xi) then
+          x_ = x - sign(1.0_dp,x)*epsilon
+        elseif(x==0.0_dp) then
+          x_ = epsilon ! just go positive I guess
+        endif
         ! Explicit term in Eqs. (175) and (176)
         K = -1./108.*(35.*CA + 74.*CF)
         ! From plus prescription
-        K = K + adaptive_integrate(integrand, x, xi)
+        K = K + adaptive_integrate(integrand, x_, xi)
         return
         contains
-        ! test...
           function integrand(y) result(intd)
               real(dp), intent(in) :: y
               real(dp) :: intd
               !
-              intd = KV1_GG_pls_nfl(x,y,xi) - KV1_GG_pls_nfl(y,x,xi)
+              intd = KV1_GG_pls_nfl(x_,y,xi) - KV1_GG_pls_nfl(y,x_,xi)
           end function integrand
     end function KV1_GG_cst_nfl
 
@@ -928,10 +991,18 @@ module kernels_nlo
         real(dp), intent(in) :: x, xi
         real(dp) :: K
         !
+        ! Hack fix (TODO clean up!)
+        real(dp) :: x_
+        x_ = x
+        if(x==xi .or. x==-xi) then
+          x_ = x - sign(1.0_dp,x)*epsilon
+        elseif(x==0.0_dp) then
+          x_ = epsilon ! just go positive I guess
+        endif
         ! Explicit term in Eqs. (175) and (176)
         K = 1./54.*(29.*CA - 28.*CF)
         ! From plus prescription
-        K = K + adaptive_integrate(integrand, x, xi)
+        K = K + adaptive_integrate(integrand, x_, xi)
         return
         contains
         ! test...
@@ -939,7 +1010,7 @@ module kernels_nlo
               real(dp), intent(in) :: y
               real(dp) :: intd
               !
-              intd = KA1_GG_pls_nfl(x,y,xi) - KA1_GG_pls_nfl(y,x,xi)
+              intd = KA1_GG_pls_nfl(x_,y,xi) - KA1_GG_pls_nfl(y,x_,xi)
           end function integrand
     end function KA1_GG_cst_nfl
 
