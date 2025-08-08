@@ -69,6 +69,8 @@ module kernels_common
         real(dp), intent(in) :: x
         real(dp) :: y
         !
+        y = 0.0_dp
+        if(x==0.0_dp .or. isnan(x) .or. abs(x) > huge(dp)) return
         y = log(abs(x))
     end function abslog
 
@@ -78,6 +80,8 @@ module kernels_common
         real(dp), intent(in) :: x
         real(dp) :: y
         !
+        y = 0.0_dp
+        if(x==0.0_dp .or. isnan(x) .or. abs(x) > huge(dp)) return
         y = log(abs(x))**2
         if(x < 0.0_dp) y = y - pi**2
     end function log2
@@ -88,6 +92,9 @@ module kernels_common
         real(dp), intent(in) :: x1, x2
         real(dp) :: y
         !
+        y = 0.0_dp
+        if(x1==0.0_dp .or. isnan(x1) .or. abs(x1) > huge(dp)) return
+        if(x2==0.0_dp .or. isnan(x2) .or. abs(x2) > huge(dp)) return
         y = log(abs(x1)) * log(abs(x2))
         if(x1 < 0.0_dp .and. x2 < 0.0_dp) y = y - pi**2
     end function logprod
