@@ -10,8 +10,7 @@ find_program(CMAKE_Fortran_COMPILER $ENV{FC} gfortran PATH)
 get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
 if(Fortran_COMPILER_NAME MATCHES "gfortran.*")
   set(CMAKE_Fortran_FLAGS "-Ofast -march=native -fopenmp \
-  -Wall -Wno-trampolines -Wno-unused-dummy-argument -Wno-conversion \
-  -mcmodel=large")
+  -Wall -Wno-trampolines -Wno-unused-dummy-argument -Wno-conversion")
 else()
   set (CMAKE_Fortran_FLAGS "-O2")
 endif()
@@ -21,6 +20,12 @@ include(CheckFortranCompilerFlag)
 check_fortran_compiler_flag("-ftrampoline-impl=heap" can_use_heap)
 if(can_use_heap)
   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -ftrampoline-impl=heap")
+endif()
+
+# Similar for mcmodel
+check_fortran_compiler_flag("-mcmodel=large" has_large_mcmodel)
+if(has_large_mcmodel)
+  set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -mcmodel=large")
 endif()
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
