@@ -9,7 +9,7 @@ As an iconic example of biological evolution,
 tiktaalik felt like a fitting name for a code package that performs
 a different kind of evolution.
 
-### Authors
+## Authors
 
 The code developers are Adam Freese (lead developer),
 Daniel Adamiak, Ian Cloët, Jianwei Qiu, Nobuo Sato and Marco Zaccheddu.
@@ -20,13 +20,13 @@ Attributions to the original authors are present in the files containing these c
 
 Helpful suggestions were additionally provided by Pi-Yueh Chuang and Sylvester Joosten.
 
-### QuantOm Collaboration
+## QuantOm Collaboration
 
 This package was created for the
 [QUAntum chromodynamics Nuclear TOMography (QuantOm) collaboration](https://quantom-collab.github.io/),
 which supported the creation of this code.
 
-### References
+## References
 
 - A. Freese, D. Adamiak, I. Cloët, W. Melnitchouk, J.-W. Qiu, N. Sato, and M. Zaccheddu.
   [Computer Physics Communications 311 (2025) 109552](https://inspirehep.net/literature/2860861)
@@ -41,7 +41,7 @@ and run:
 pip install .
 ```
 
-### Dependencies
+## Dependencies
 
 - Python
 - A Fortran compiler (ideally gfortran)
@@ -54,7 +54,7 @@ but not to install or run tiktaalik itself.
 
 See `examples/examples.py` for examples of usage.
 
-### Limitations
+## Limitations
 
 There are lower limits to the skewness (xi) at which tiktaalik can be trusted:
 - Leading-order (LO) evolution is numerically stable down to xi=3e-6
@@ -67,21 +67,21 @@ is numerically stable down to xi=5e-3
 
 # Recent updates
 
-### May 13, 2025
+## May 13, 2025
 
 The adaptive integration was simplified, and NLO evolution is trustworthy
 to smaller xi values than previously.
 NLO evolution is now trustworthy down to xi=2e-5.
 (LO is trustworthy down to xi=3e-6.)
 
-### May 10, 2025
+## May 10, 2025
 
 The build system was refactored to use scikit-build instead of numpy.distutils,
 since the latter is discontinued as of Python 3.12.
 In addition to the package being future-proofed, it is now easier to install,
 and the installation is managed by pip.
 
-### February 18, 2025
+## February 18, 2025
 
 tiktaalik now supports next-to-leading order (NLO) evolution of GPDs.
 NLO evolution is turned off by default,
