@@ -6,7 +6,8 @@
     - [ ] NLO Wilson coefficients for DVCS
 [x] deprecate Evolver class
 [ ] benchmark module
-    - [ ] shift benchmarks
+    - [x] shift benchmarks
+    - [x] streamline benchmark plot class
     - [ ] benchmarks for Wilson coefficients
     - [ ] polynomiality benchmarks
 [ ] new example codes

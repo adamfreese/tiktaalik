@@ -82,7 +82,7 @@ def set_x_xi_grids(nx, xi, grid_type, lagrange_order=5):
     Input:
         - nx (integer, >= 6)
             number of x points
-        - xi (np.float or np.array)
+        - xi (float or np.array)
             xi points
         - grid_type (integer)
             specify how the x grid should be constructed

@@ -34,12 +34,12 @@ set(CMAKE_Fortran_MODULE_DIRECTORY ${CMAKE_BINARY_DIR}/include
   CACHE PATH "Fortran module directory")
 
 # Add all subdirectories
+add_subdirectory(benchmarks)
 add_subdirectory(evolution)
 add_subdirectory(helpers)
 add_subdirectory(matrices)
 add_subdirectory(model)
 add_subdirectory(qcd)
-add_subdirectory(tests)
 add_subdirectory(wilson)
 
 set(tiktaalik_libs "tiktaalik")

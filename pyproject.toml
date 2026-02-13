@@ -15,7 +15,7 @@ build.verbose = true
 
 [project]
 name = "tiktaalik"
-version = "0.3.1"
+version = "1.0.0"
 description = "Finite element code for evolution of generalized parton distributions"
 authors = [
   {name = "Adam Freese", email = "afreese@jlab.org"},
@@ -31,7 +31,8 @@ maintainers = [
 readme = "README.md"
 license = {file = "LICENSE"}
 dependencies = [
-  "numpy",
+  "matplotlib",
+  "numpy"
 ]
 
 [project.urls]
