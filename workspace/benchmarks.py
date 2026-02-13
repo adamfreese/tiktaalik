@@ -32,12 +32,14 @@ def shift_benchmark(key='NS', xi=0.5, nx=40, nlo=False, ns_type=1, grid_type=1):
             inlay  = inlay,
             filename = 'benchmark_' + key
             )
-    tk.matrices.initialize_kernels(nx, xi, grid_type=grid_type)
+    #tk.matrices.initialize_kernels(nx, xi, grid_type=grid_type)
+    tk.matrices.set_x_xi_grids(nx, xi, grid_type)
     K  = get_kernel(key=key, ns_type=ns_type, nlo=nlo)
     x = tk.matrices.get_x_grid()[:,0]
     H0 = gpd_key(x, xi=xi, key=key)
     dH = np.einsum('ij,j->i', K[:,:,0], H0)
     bm.plot_data(x, dH, label=r'tiktaalik')
+    print(x, H0, dH)
     # Finish
     bm.finish()
     return

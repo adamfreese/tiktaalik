@@ -130,7 +130,8 @@ def get_xi_shift(xi, nx=100, nlo=False, key='NS'):
     ns_type = 1
     grid_type = 2
     # Initialize kernels, make shift
-    tk.matrices.initialize_kernels(nx, xi, grid_type=grid_type)
+    #tk.matrices.initialize_kernels(nx, xi, grid_type=grid_type)
+    tk.matrices.set_x_xi_grids(nx, xi, grid_type)
     K  = get_kernel(key=key, ns_type=ns_type, nlo=nlo)
     x = tk.matrices.pixelspace(nx, xi=xi, grid_type=grid_type)
     H0 = gpd_key(x, xi=xi, key=key)

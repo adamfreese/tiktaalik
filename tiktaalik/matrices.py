@@ -13,10 +13,12 @@ from .f90wrap.matrices import dummy as f90src
 from . import pars
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# A global dictionary containing information about what's been initialized
-# It's initialized with some sane default values
+# A global dictionary containing information about what's been initialized.
+# It's initialized with some sane default values.
+# This should be treated like a hidden variable, and only modified by methods
+# in this file.
 
-matrix_dict = {
+_matrix_dict = {
         'nQ2' : 2,
         'Q2'  : np.array([pars.mc2, pars.mb2]),
         'nxi' : 5,
@@ -34,13 +36,15 @@ matrix_dict = {
 # The autmatically-run initialization routine, called when tiktaalik starts
 
 def first_initialization():
-    # TODO: docstring
-    f90src.initialize_x_xi_wrap(matrix_dict['nx'],
-                                matrix_dict['xi'],
-                                matrix_dict['grid_type'],
-                                matrix_dict['lagrange_order']
+    ''' Method is run when tiktaalik is imported. This ensures some reasonable
+    x, xi and Q2 arrays exist in memory.
+    '''
+    f90src.initialize_x_xi_wrap(_matrix_dict['nx'],
+                                _matrix_dict['xi'],
+                                _matrix_dict['grid_type'],
+                                _matrix_dict['lagrange_order']
                                 )
-    f90src.initialize_q2_wrap(matrix_dict['Q2'])
+    f90src.initialize_q2_wrap(_matrix_dict['Q2'])
     return
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -53,18 +57,18 @@ def get_x_grid():
     the x spacing may be xi-dependent.
     Thus, this is effectively an array of nxi x arrays.
     '''
-    nx  = matrix_dict['nx']
-    nxi = matrix_dict['nxi']
+    nx  = _matrix_dict['nx']
+    nxi = _matrix_dict['nxi']
     x = f90src.get_x_wrap(nx, nxi)
     return x
 
 def get_xi_array():
-    nxi = matrix_dict['nxi']
+    nxi = _matrix_dict['nxi']
     xi = f90src.get_xi_wrap(nxi)
     return xi
 
 def get_Q2_array():
-    nQ2 = matrix_dict['nQ2']
+    nQ2 = _matrix_dict['nQ2']
     Q2 = f90src.get_q2_wrap(nQ2)
     return Q2
 
@@ -72,39 +76,65 @@ def get_Q2_array():
 # Methods for the user to set x, xi and Q2 grids
 
 def set_x_xi_grids(nx, xi, grid_type, lagrange_order=5):
-    # TODO: docstring
-    ''' TODO: dicstring '''
-    # Assert requirements
-    #assert(nx==(nx//2)*2)
+    ''' Set the x and xi grids used internally to construct kernel and evolution
+    matrices.
+    ------
+    Input:
+        - nx (integer, >= 6)
+            number of x points
+        - xi (np.float or np.array)
+            xi points
+        - grid_type (integer)
+            specify how the x grid should be constructed
+            grid_type=1 for linearly-spaced grid
+            grid_type=2 for hybrid log-linear grid with x=+/-xi on the grid
+        - lagrange_order (integer, optional)
+            order of piecewise lagrange interpolation
+    '''
     assert(nx>=6)
     # Cache the data sent by the user
-    matrix_dict['nx']  = nx
+    _matrix_dict['nx']  = nx
     if(np.isscalar(xi)):
         xi = np.array([xi])
-    matrix_dict['nxi'] = xi.shape[0]
-    matrix_dict['xi']  = xi
-    matrix_dict['grid_type'] = grid_type
+    _matrix_dict['nxi'] = xi.shape[0]
+    _matrix_dict['xi']  = xi
+    _matrix_dict['grid_type'] = grid_type
     # Set the x and xi grids in the Fortran code
     f90src.initialize_x_xi_wrap(nx, xi, grid_type, lagrange_order)
     # Mark all matrices as uninitialized, since their shape may now be invalid
-    matrix_dict['kernel_init'] = False
-    matrix_dict['evomat_init'] = False
-    matrix_dict['wilson_init'] = False
+    _matrix_dict['kernel_init'] = False
+    _matrix_dict['evomat_init'] = False
+    _matrix_dict['wilson_init'] = False
     return
 
 def set_Q2_grid(Q2):
-    # TODO: docstring
-    ''' TODO: dicstring '''
-    # Assert requirements
+    ''' Set the Q2 grid used internally to construct evolution matrices.
+    ------
+    Input:
+        - Q2 (np.array, size >= 2)
+            specific Q2 points
+    '''
     assert(Q2.shape[0] >= 2)
     # Cache the data sent by the user
-    matrix_dict['nQ2'] = Q2.shape[0]
-    matrix_dict['Q2']  = Q2
+    _matrix_dict['nQ2'] = Q2.shape[0]
+    _matrix_dict['Q2']  = Q2
     # Set the Q2 grid in the Fortran code
     f90src.initialize_q2_wrap(Q2)
     # Mark matrices as uninitialized that depend on the Q2 shape/range
-    matrix_dict['evomat_init'] = False
-    matrix_dict['wilson_init'] = False
+    _matrix_dict['evomat_init'] = False
+    _matrix_dict['wilson_init'] = False
+    return
+
+def do_lo_evolution():
+    ''' Tell tiktaalik to do evolution at leading order (LO). '''
+    _matrix_dict['nlo'] = False
+    _matrix_dict['evomat_init'] = False
+    return
+
+def do_nlo_evolution():
+    ''' Tell tiktaalik to do evolution at next-to-leading order (NLO). '''
+    _matrix_dict['nlo'] = True
+    _matrix_dict['evomat_init'] = False
     return
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -119,9 +149,7 @@ def kernel_VQQ(Q2=pars.mc2, nfl=4, nlo=False, ns_type=1):
     The kernel depends on Q2 through alphaQCD, nfl, and whether it's NLO too.
     '''
     assert(nfl==3 or nfl==4 or nfl==5)
-    if(matrix_dict['kernel_init']==False):
-        f90src.make_kernels_wrap()
-        matrix_dict['kernel_init'] = True
+    _check_kernel_initialization()
     nx  = f90src.get_nx_wrap()
     nxi = f90src.get_nxi_wrap()
     K = f90src.evokernel_vqq_wrap(Q2, nx, nxi, nfl, nlo, ns_type)
@@ -132,9 +160,7 @@ def kernel_VQG(Q2=pars.mc2, nfl=4, nlo=False):
     The kernel depends on Q2 through alphaQCD, nfl, and whether it's NLO.
     '''
     assert(nfl==3 or nfl==4 or nfl==5)
-    if(matrix_dict['kernel_init']==False):
-        f90src.make_kernels_wrap()
-        matrix_dict['kernel_init'] = True
+    _check_kernel_initialization()
     nx  = f90src.get_nx_wrap()
     nxi = f90src.get_nxi_wrap()
     K = f90src.evokernel_vqg_wrap(Q2, nx, nxi, nfl, nlo)
@@ -145,9 +171,7 @@ def kernel_VGQ(Q2=pars.mc2, nfl=4, nlo=False):
     The kernel depends on Q2 through alphaQCD, nfl, and whether it's NLO.
     '''
     assert(nfl==3 or nfl==4 or nfl==5)
-    if(matrix_dict['kernel_init']==False):
-        f90src.make_kernels_wrap()
-        matrix_dict['kernel_init'] = True
+    _check_kernel_initialization()
     nx  = f90src.get_nx_wrap()
     nxi = f90src.get_nxi_wrap()
     K = f90src.evokernel_vgq_wrap(Q2, nx, nxi, nfl, nlo)
@@ -158,9 +182,7 @@ def kernel_VGG(Q2=pars.mc2, nfl=4, nlo=False):
     The kernel depends on Q2 through alphaQCD, nfl, and whether it's NLO.
     '''
     assert(nfl==3 or nfl==4 or nfl==5)
-    if(matrix_dict['kernel_init']==False):
-        f90src.make_kernels_wrap()
-        matrix_dict['kernel_init'] = True
+    _check_kernel_initialization()
     nx  = f90src.get_nx_wrap()
     nxi = f90src.get_nxi_wrap()
     K = f90src.evokernel_vgg_wrap(Q2, nx, nxi, nfl, nlo)
@@ -175,9 +197,7 @@ def kernel_AQQ(Q2=pars.mc2, nfl=4, nlo=False, ns_type=1):
     The kernel depends on Q2 through alphaQCD, nfl, and whether it's NLO too.
     '''
     assert(nfl==3 or nfl==4 or nfl==5)
-    if(matrix_dict['kernel_init']==False):
-        f90src.make_kernels_wrap()
-        matrix_dict['kernel_init'] = True
+    _check_kernel_initialization()
     nx  = f90src.get_nx_wrap()
     nxi = f90src.get_nxi_wrap()
     K = f90src.evokernel_aqq_wrap(Q2, nx, nxi, nfl, nlo, ns_type)
@@ -188,9 +208,7 @@ def kernel_AQG(Q2=pars.mc2, nfl=4, nlo=False):
     The kernel depends on Q2 through alphaQCD, nfl, and whether it's NLO.
     '''
     assert(nfl==3 or nfl==4 or nfl==5)
-    if(matrix_dict['kernel_init']==False):
-        f90src.make_kernels_wrap()
-        matrix_dict['kernel_init'] = True
+    _check_kernel_initialization()
     nx  = f90src.get_nx_wrap()
     nxi = f90src.get_nxi_wrap()
     K = f90src.evokernel_aqg_wrap(Q2, nx, nxi, nfl, nlo)
@@ -201,9 +219,7 @@ def kernel_AGQ(Q2=pars.mc2, nfl=4, nlo=False):
     The kernel depends on Q2 through alphaQCD, nfl, and whether it's NLO.
     '''
     assert(nfl==3 or nfl==4 or nfl==5)
-    if(matrix_dict['kernel_init']==False):
-        f90src.make_kernels_wrap()
-        matrix_dict['kernel_init'] = True
+    _check_kernel_initialization()
     nx  = f90src.get_nx_wrap()
     nxi = f90src.get_nxi_wrap()
     K = f90src.evokernel_agq_wrap(Q2, nx, nxi, nfl, nlo)
@@ -214,9 +230,7 @@ def kernel_AGG(Q2=pars.mc2, nfl=4, nlo=False):
     The kernel depends on Q2 through alphaQCD, nfl, and whether it's NLO.
     '''
     assert(nfl==3 or nfl==4 or nfl==5)
-    if(matrix_dict['kernel_init']==False):
-        f90src.make_kernels_wrap()
-        matrix_dict['kernel_init'] = True
+    _check_kernel_initialization()
     nx  = f90src.get_nx_wrap()
     nxi = f90src.get_nxi_wrap()
     K = f90src.evokernel_agg_wrap(Q2, nx, nxi, nfl, nlo)
@@ -224,7 +238,6 @@ def kernel_AGG(Q2=pars.mc2, nfl=4, nlo=False):
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Routines to obtain evolution matrices
-# TODO: initialize if uninitialized, or nlo truth value contradicts cached value
 
 def matrix_VNS(ns_type=1):
     ''' Evolution matrix for *non-singlet* Q->Q, helicity-independent (V-type).
@@ -233,6 +246,8 @@ def matrix_VNS(ns_type=1):
     and minus-type non-singlet distributions such as u-ubar.
     The ns_type parameter only matters for NLO.
     '''
+    _check_kernel_initialization()
+    _check_evomat_initialization()
     nx  = f90src.get_nx_wrap()
     nxi = f90src.get_nxi_wrap()
     nQ2 = f90src.get_nq2_wrap()
@@ -244,6 +259,8 @@ def matrix_VNS(ns_type=1):
 def matrix_VSG():
     ''' Evolution matrix for singlet sector, helicity-independent (V-type).
     '''
+    _check_kernel_initialization()
+    _check_evomat_initialization()
     nx  = f90src.get_nx_wrap()
     nxi = f90src.get_nxi_wrap()
     nQ2 = f90src.get_nq2_wrap()
@@ -259,6 +276,8 @@ def matrix_ANS(ns_type=1):
     and minus-type non-singlet distributions such as u-ubar.
     The ns_type parameter only matters for NLO.
     '''
+    _check_kernel_initialization()
+    _check_evomat_initialization()
     nx  = f90src.get_nx_wrap()
     nxi = f90src.get_nxi_wrap()
     nQ2 = f90src.get_nq2_wrap()
@@ -270,6 +289,8 @@ def matrix_ANS(ns_type=1):
 def matrix_ASG():
     ''' Evolution matrix for singlet sector, helicity-dependent (A-type).
     '''
+    _check_kernel_initialization()
+    _check_evomat_initialization()
     nx  = f90src.get_nx_wrap()
     nxi = f90src.get_nxi_wrap()
     nQ2 = f90src.get_nq2_wrap()
@@ -288,9 +309,9 @@ def dvcs_Cq(nlo=False):
     nxi = f90src.get_nxi_wrap()
     nQ2 = f90src.get_nq2_wrap()
     # Make sure the Wilson coefficient matrices are initialized
-    if(matrix_dict['wilson_init']==False):
+    if(_matrix_dict['wilson_init']==False):
         f90src.make_wilson_wrap(nQ2)
-        matrix_dict['wilson_init'] = True
+        _matrix_dict['wilson_init'] = True
     # Get the coefficients
     C = f90src.dvcs_cq_wrap(nx, nxi, nQ2, nlo)
     return C
@@ -302,9 +323,9 @@ def dvcs_Cg(nlo=False):
     nxi = f90src.get_nxi_wrap()
     nQ2 = f90src.get_nq2_wrap()
     # Make sure the Wilson coefficient matrices are initialized
-    if(matrix_dict['wilson_init']==False):
+    if(_matrix_dict['wilson_init']==False):
         f90src.make_wilson_wrap(nQ2)
-        matrix_dict['wilson_init'] = True
+        _matrix_dict['wilson_init'] = True
     # Get the coefficients
     C = f90src.dvcs_cg_wrap(nx, nxi, nQ2, nlo)
     return C
@@ -347,67 +368,7 @@ def get_nfl(Q2):
     return 5
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Deprecated methods
-
-def initialize_kernels(nx, xi, grid_type=1):
-    ''' Deprecated routine. '''
-    #This **MUST** be called before any other methods:
-    #- Before methods to get kernels.
-    #- Before methods to get evolution matrices.
-    #- Before methods to initialize evolution matrices.
-    #INPUT:
-    #- nx .......... integer, number of x points.
-    #                Must be even, and at least 6.
-    #                Spacing depends on grid_type
-    #- xi .......... numpy.array, with the xi points to be used; if a scalar
-    #                is passed, it will be turned into a one-component array.
-    #- grid_type ... integer, specifying the grid type.
-    #                1 : nx linearly spaced points from -1+1/nx to 1-1/nx
-    #                2 : nx/4 log-spaced points in each of the DGLAP regions,
-    #                    and nx/2 linearly-spaced points in the ERBL region
-    #OUTPUT:
-    #- None
-    #NOTES:
-    #- If the user wishes to change either nx or xi, just call this method again.
-    #  Calling this method deallocates any existing evolution matrices.
-    print("The routine initialize_kernels is deprecated.")
-    print("I will initialize your x and xi grids.")
-    print("The kernels will be initialized during the first retrieval.")
-    set_x_xi_grids(nx, xi, grid_type, lagrange_order=5)
-    return
-
-def initialize_evolution_matrices(Q2=matrix_dict['Q2'], nlo=False):
-    # TODO: rework docstring , or try to deprecate
-    ''' Initializes the evolution matrices.
-    This **MUST** be called before any method to get the evolution matrices.
-    Moreover, initialize_kernels (above) **MUST** be called first.
-    nx and nxi should be consistent with those used to initialize the kernels.
-    INPUT:
-    - Q2 .... numpy.array, with *at least* two values
-         first value is the Q2 value at which evolutuon starts
-    - nlo ... boolean, False by default; whether to include NLO corrections.
-    OUTPUT:
-    - None
-    NOTES:
-    - If the user wishes to change the Q2 array, this must be called again.
-    - If the user wishes to change the nx or xi, initialize_kernels
-      must be called to do this.
-    - If the user wishes to toggle NLO, this must be called again.
-    - If initialize_kernels has been called, any initialized evolution matrices
-      have been erased and this routine must be called again.
-    '''
-    nQ2 = Q2.shape[0]
-    assert(nQ2 >= 2)
-    # If the kernels are not initialized, we must initialize them...
-    if(matrix_dict['kernel_init']==False):
-        f90src.make_kernels_wrap()
-        matrix_dict['kernel_init'] = True
-    # Reiniitialize the Q2 grid if something new has been plugged in
-    if(not np.array_equal(Q2, matrix_dict['Q2'])):
-        set_Q2_grid(Q2)
-    # Finally, make the evolution matrices
-    f90src.make_matrices_wrap(Q2, nlo)
-    return
+# to deprecate
 
 def pixelspace(nx, xi=0.5, grid_type=1):
     # TODO: replace by returning cached x space
@@ -429,3 +390,26 @@ def pixelspace(nx, xi=0.5, grid_type=1):
     '''
     x = f90src.pixelspace_wrap(nx, xi, grid_type)
     return x
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Internal helper routines
+
+def _check_kernel_initialization():
+    ''' Check if kernels are initialized, and initialize them if they're not.
+    Also flag them as initialized after.
+    '''
+    if(_matrix_dict['kernel_init']==False):
+        f90src.make_kernels_wrap()
+        _matrix_dict['kernel_init'] = True
+    return
+
+def _check_evomat_initialization():
+    ''' Check if evolution matrices are initialized, and initialize them if
+    they're not. Also flag them as initialized after.
+    '''
+    if(_matrix_dict['evomat_init']==False):
+        Q2 = _matrix_dict['Q2']
+        nlo = _matrix_dict['nlo_evo']
+        f90src.make_matrices_wrap(Q2, nlo)
+        _matrix_dict['evomat_init'] = True
+    return
