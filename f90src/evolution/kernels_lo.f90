@@ -98,12 +98,6 @@ module kernels_lo
         Y2 = 0.5*(1.-y/xi)
         ! Eqs. (74), (75)
         K = - qG_f_a(X1,Y1)*rho_step(X1,Y1) + qG_f_a(X2,Y2)*rho_step(X2,Y2)
-        !if(X1==0.0_dp) then
-        !  print *, "Flag X1", qG_f_a(X1,Y1), rho_step(X1,Y1)
-        !endif
-        !if(X2==0.0_dp) then
-        !  print *, "Flag X2", qG_f_a(X2,Y2), rho_step(X2,Y2)
-        !endif
         K = 2.*TF*0.5*K/xi
         K = K / (2.*xi) ! Eq. (15) of BFM
     end function KA0_qG_reg

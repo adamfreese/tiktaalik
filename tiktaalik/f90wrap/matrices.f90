@@ -38,8 +38,6 @@ module dummy
         integer,  parameter  :: dp = kind(1d0)
         integer,  intent(in) :: nx, nxi, grid_type, lagrange_order
         real(dp), intent(in) :: xi_grid(nxi)
-        !print *, "Flag A"
-        !print *, nx, nxi, grid_type
         call initialize_x_xi(nx, nxi, xi_grid, grid_type, lagrange_order)
     end subroutine initialize_x_xi_wrap
 
@@ -47,9 +45,6 @@ module dummy
         integer,  parameter  :: dp = kind(1d0)
         integer,  intent(in) :: nQ2
         real(dp), intent(in) :: Q2_array(nQ2)
-        print *, "Flag Q2"
-        print *, nQ2
-        print *, Q2_array
         call initialize_Q2(nQ2, Q2_array)
     end subroutine initialize_Q2_wrap
 

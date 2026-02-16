@@ -83,13 +83,9 @@ module matrices_evolution
         nx  = get_nx()
         nxi = get_nxi()
         ! Make evolution matrices
-        print *, "Flag A"
         call make_evomat_NS(  nx, nxi, nQ2, Q2, l_nlo)
-        print *, "Flag B"
         call make_evomat_V_SG(nx, nxi, nQ2, Q2, l_nlo)
-        print *, "Flag C"
         call make_evomat_A_SG(nx, nxi, nQ2, Q2, l_nlo)
-        print *, "Flag D"
     end subroutine make_evolution_matrices
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -474,13 +470,10 @@ module matrices_evolution
         logical,  intent(in) :: l_nlo
         real(dp), dimension(nx,nx) :: idnx
         integer :: ix, ixi, iQ2, nfl
-        print *, "Flag A1"
         if(allocated(M_NS_pls)) deallocate(M_NS_pls)
         if(allocated(M_NS_min)) deallocate(M_NS_min)
-        print *, "Flag A2"
         allocate(M_NS_pls(nx,nx,nxi,nQ2))
         allocate(M_NS_min(nx,nx,nxi,nQ2))
-        print *, "Flag A3"
         ! Build an identity matrix  ... TODO REPLACE
         idnx = 0.0_dp
         do ix=1, nx, 1
@@ -493,10 +486,8 @@ module matrices_evolution
           M_NS_pls(:,:,ixi,1) = idnx
           M_NS_min(:,:,ixi,1) = idnx
         end do
-        print *, "Flag A4"
         ! Build evolution matrices for all other scales
         do iQ2=2, nQ2, 1
-          print *, "Flag AQ", iQ2, nQ2
           !$OMP PARALLEL DO
           do ixi=1, nxi, 1
             ! First, an evolution matrix for prior Q2 step to current Q2 step
@@ -511,7 +502,6 @@ module matrices_evolution
           end do
           !$OMP END PARALLEL DO
         end do
-        print *, "Flag A5"
     end subroutine make_evomat_NS
 
     subroutine make_evomat_V_SG(nx, nxi, nQ2, Q2, l_nlo)
