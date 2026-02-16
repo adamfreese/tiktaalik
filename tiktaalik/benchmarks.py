@@ -47,51 +47,103 @@ def shift_benchmark(key='NS', xi=0.1, nx=81, nlo=False, ns_type=1, grid_type=2):
             1 : linear x spacing
             2 : log-linear hybrid spacing
     '''
-    # Define a ground truth function
-    gt_fun = _get_gt_fun(key=key, xi=xi, nlo=nlo, ns_type=ns_type)
-    # Make the benchmark plot object
-    symlog = False
-    if(grid_type==2):
-        symlog = True
-    plot = shiftplot(gt_fun, xi=xi, symlog = symlog)
-    # Get the shifts from tiktaalik
+    # Set the grids
     matrices.set_x_xi_grids(nx, xi, grid_type)
+    matrices.set_Q2_grid(np.array([4,5]))
+    # Retrieve x grid
+    x_pixel = matrices.get_x_grid()
+    # Retrieve kernel matrix (interpixel method)
     K  = _get_kernel(key=key, ns_type=ns_type, nlo=nlo)
-    x = matrices.get_x_grid()[:,0]
-    H0 = _gpd_key(x, xi=xi, key=key)
-    dH = np.einsum('ij,j->i', K[:,:,0], H0)
-    # Compare
-    plot.plot_data(x, dH, label=r'tiktaalik')
-    plot.show()
+    # Interpixel shift
+    H0 = _get_gpd(x_pixel, xi=xi, key=key)
+    dH_pixel = np.einsum('ij,j->i', K[:,:,0], H0)
+    # Continuum shift ("ground truth")
+    x_truth = _make_continuum_x(xi)
+    dH_truth = _get_continuum_shift(x_truth, key=key, xi=xi, nlo=nlo, ns_type=ns_type)
+    # Error
+    dH_truth_2 = _get_continuum_shift(x_pixel, key=key, xi=xi, nlo=nlo, ns_type=ns_type)
+    error = 100*abs(dH_pixel - dH_truth_2) / abs(dH_truth_2)
+    # Set up the plot
+    nrows, ncols = 2, 1
+    fig, (ax1, ax2) = plt.subplots(
+            nrows, ncols,
+            gridspec_kw={'height_ratios': [3,1]},
+            figsize=(8,8),
+            layout = 'constrained'
+            )
+    ax1.plot(x_truth, dH_truth, '-', label=r'Truth',     color='xkcd:lavender')
+    ax1.plot(x_pixel, dH_pixel, '+', label=r'tiktaalik', color='xkcd:forest green')
+    # Error
+    ax2.plot(x_pixel, error, '+', label=r'tiktaalik', color='xkcd:forest green')
+    # Plot labels etc
+    ax2.set_ylim((1e-6,1e3))
+    ax2.plot(x_truth, x_truth*0+1, linewidth=1, color='tab:gray')
+    for ax in [ax1, ax2]:
+        _plot_xi_lines(ax, xi)
+        ax.set_xlim((-1,1))
+        if(grid_type==2):
+            ax.set_xscale('symlog', linthresh=xi)
+    ax2.set_yscale('log')
+    ax2.set_xlabel(r'$x$')
+    ax1.get_xaxis().set_visible(False)
+    ax1.set_ylabel(r'$\int \mathrm{d} y \, K(x,y,\xi) H(y)$')
+    ax2.set_ylabel(r'percent error')
+    # Finish
+    fig.show()
+    return
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Wilson coefficient benchmark
+
+def wilson_benchmark(
+        key='q',
+        nx = 101,
+        t = 0,
+        grid_type = 2,
+        nlo = False
+        ):
+    # Set the grids
+    xi = np.geomspace(1e-4, 1, 100)
+    matrices.set_Q2_grid(np.array([4,5]))
+    matrices.set_x_xi_grids(nx, xi, grid_type)
+    # Retrieve x grid
+    x = matrices.get_x_grid()
+    # Retrieve coefficient matrix (interpixel method)
+    C = _get_dvcs_coefficient(key=key, nlo=nlo)
+    # Interpiixel CFF
+    Hq = _dvcs_quark_combo(x, xi, t)
+    cff_pixel = np.einsum('ij,ji...->i...', C, Hq)[:,0]
+    # Continuum CFF ("ground truth")
+    cff_truth = _get_continuum_cff(xi, key=key, Q2=4, nlo=nlo)
+    # Set up plot
+    nrows, ncols = 2, 1
+    fig, (ax1, ax2) = plt.subplots(
+            nrows, ncols,
+            gridspec_kw={'height_ratios': [3,1]},
+            figsize=(8,8),
+            layout = 'constrained'
+            )
+    ax1.plot(xi, xi*np.real(cff_truth), '-',  label=r'Truth     (real)', color='xkcd:electric blue')
+    ax1.plot(xi, xi*np.real(cff_pixel), '+',  label=r'tiktaalik (real)', color='xkcd:forest green')
+    ax1.plot(xi, xi*np.imag(cff_truth), '--', label=r'Truth     (imag)', color='xkcd:ochre')
+    ax1.plot(xi, xi*np.imag(cff_pixel), 'x',  label=r'tiktaalik (imag)', color='xkcd:rich purple')
+    # Error
+    ImErr = 100*abs(np.imag(cff_truth-cff_pixel) / np.imag(cff_truth))
+    ReErr = 100*abs(np.real(cff_truth-cff_pixel) / np.real(cff_truth))
+    ax2.plot(xi, ReErr, '+', label=r'Error (real)', color='xkcd:forest green')
+    ax2.plot(xi, ImErr, 'x', label=r'Error (imag)', color='xkcd:rich purple')
+    # Finish
+    for ax in [ax1, ax2]:
+        ax.set_xscale('log')
+    ax2.set_xlabel(r'$\xi$')
+    ax1.set_ylabel(r'$\mathcal{H}(\xi)$')
+    ax2.set_ylabel(r'percent error')
+    _ = ax1.legend(prop = { 'size' : 17 }, loc=1)
+    fig.show()
     return
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Auxiliary functions
-
-def _get_gt_fun(key='NS', xi=0.1, Q2=pars.mc2, nlo=False, ns_type=1):
-    def gt_fun_NS(x):
-        return continuum.shift_cNS(x, xi, Q2, nlo, ns_type)[:,0]
-    def gt_fun_QQ(x):
-        return continuum.shift_cQQ(x, xi, Q2, nlo)[:,0]
-    def gt_fun_QG(x):
-        return continuum.shift_cQG(x, xi, Q2, nlo)[:,0]
-    def gt_fun_GQ(x):
-        return continuum.shift_cGQ(x, xi, Q2, nlo)[:,0]
-    def gt_fun_GG(x):
-        return continuum.shift_cGG(x, xi, Q2, nlo)[:,0]
-    if(key=='NS'):
-        gt_fun = gt_fun_NS
-    elif(key=='qq'):
-        gt_fun = gt_fun_QQ
-    elif(key=='qg'):
-        gt_fun = gt_fun_QG
-    elif(key=='gq'):
-        gt_fun = gt_fun_GQ
-    elif(key=='gg'):
-        gt_fun = gt_fun_GG
-    else:
-        raise ValueError("Key "+key+" unrecognized.")
-    return gt_fun
 
 def _get_kernel(key='NS', nfl=4, ns_type=1, nlo=False):
     if(key=='NS'):
@@ -108,7 +160,16 @@ def _get_kernel(key='NS', nfl=4, ns_type=1, nlo=False):
         raise ValueError("Key "+key+" unrecognized.")
     return K
 
-def _gpd_key(x, xi=0.1, key='NS'):
+def _get_dvcs_coefficient(key='q', nlo=False):
+    if(key=='q'):
+        C = matrices.dvcs_Cq(nlo=nlo)[:,:,0]
+    elif(key=='g'):
+        C = matrices.dvcs_Cg(nlo=nlo)[:,:,0]
+    else:
+        raise ValueError("Key "+key+" unrecognized.")
+    return C
+
+def _get_gpd(x, xi=0.1, key='NS'):
     H = np.zeros(x.shape)
     if(key=='NS'):
         H = _ns_gpd(x, xi)
@@ -119,6 +180,30 @@ def _gpd_key(x, xi=0.1, key='NS'):
     H[np.isnan(H)] = 0
     H[np.isinf(H)] = 0
     return H
+
+def _get_continuum_shift(x, key='NS', xi=0.1, Q2=pars.mc2, nlo=False, ns_type=1):
+    if(key=='NS'):
+        continuum_shift = continuum.shift_cNS(x, xi, Q2, nlo, ns_type)[:,0]
+    elif(key=='qq'):
+        continuum_shift = continuum.shift_cQQ(x, xi, Q2, nlo)[:,0]
+    elif(key=='qg'):
+        continuum_shift = continuum.shift_cQG(x, xi, Q2, nlo)[:,0]
+    elif(key=='gq'):
+        continuum_shift = continuum.shift_cGQ(x, xi, Q2, nlo)[:,0]
+    elif(key=='gg'):
+        continuum_shift = continuum.shift_cGG(x, xi, Q2, nlo)[:,0]
+    else:
+        raise ValueError("Key "+key+" unrecognized.")
+    return continuum_shift
+
+def _get_continuum_cff(xi, key='q', Q2=4, nlo=False):
+    if(key=='q'):
+        continuum_cff = continuum.cff_q(xi, Q2, nlo=nlo)
+    elif(key=='g'):
+        continuum_cff = continuum.cff_g(xi, Q2, nlo=nlo)
+    else:
+        raise ValueError("Key "+key+" unrecognized.")
+    return continuum_cff
 
 def _ns_gpd(x, xi):
     T3 = model.Hu(x,xi,0) - model.Hd(x,xi,0)
@@ -131,86 +216,30 @@ def _singlet_gpd(x, xi):
 def _gluon_gpd(x, xi):
     return model.Hg(x,xi,0)[:,0,0]
 
+def _dvcs_quark_combo(x, xi, t):
+    H = (
+            4/9*(model.Hu(x,xi,t) - model.Hu(-x,xi,t))
+            +
+            1/9*(model.Hd(x,xi,t) - model.Hd(-x,xi,t))
+            +
+            1/9*(model.Hs(x,xi,t) - model.Hs(-x,xi,t))
+            )
+    return H
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# A plot object for accuracy demos
+# Plot utilities
 
-class shiftplot:
-    ''' Class for making benchmark plots of evolution shifts. '''
+def _make_continuum_x(xi):
+    N = 200
+    x1 = np.geomspace( -1, -xi, N)
+    x2 = np.linspace( -xi,  xi, N)
+    x3 = np.geomspace( xi,   1, N)
+    x = np.concatenate((x1[:N-1], x2[0:N], x3[1:]))
+    return x
 
-    def __init__(self, gt_fun, xi=0.1, symlog=False):
-        nrows,ncols=2,1
-        self.fig, (self.ax1, self.ax2) = plt.subplots(
-                nrows, ncols,
-                gridspec_kw={'height_ratios': [3,1]},
-                figsize=(8,8),
-                layout = 'constrained'
-                )
-        self.gt_fun = gt_fun
-        #
-        self.xi = xi
-        self.symlog = symlog
-        self.plot_baselines()
-        self.plot_gt()
-        return
-
-    def plot_gt(self):
-        N = 200
-        x1 = np.geomspace(      -1, -self.xi, N)
-        x2 = np.linspace( -self.xi,  self.xi, N)
-        x3 = np.geomspace( self.xi,        1, N)
-        x = np.concatenate((x1[:N-1], x2[0:N], x3[1:]))
-        H = self.gt_fun(x)
-        self.ax1.plot(x, H, '-', linewidth=2, label=r'Ground truth', color='xkcd:true green')
-        return
-
-    def plot_baselines(self):
-        x = np.linspace(-1, 1, 100)
-        zero = np.zeros(x.shape)
-        one  = zero + 1
-        self.ax1.plot(x, zero, '-', color='tab:gray', linewidth=1)
-        self.ax2.plot(x, one,  '-', color='tab:gray', linewidth=1)
-        return
-
-    def plot_xi_lines(self):
-        for ax in [self.ax1, self.ax2]:
-            ymin, ymax = ax.get_ylim()
-            ax.vlines( self.xi, ymin, ymax, color='tab:gray', linewidth=1)
-            ax.vlines(-self.xi, ymin, ymax, color='tab:gray', linewidth=1)
-            ax.set_ylim((ymin,ymax))
-        return
-
-    def plot_data(self, x, H, label=None):
-        self.ax1.plot(x, H, '.', label='tiktaalik', color='xkcd:rich purple')
-        truth = self.gt_fun(x)
-        error = 100*abs(H - truth) / (abs(truth))
-        self.ax2.plot(x, error, '.', color='xkcd:rich purple')
-        return
-
-    def show(self):
-        # Log scale for error plot
-        self.ax2.set_yscale('log')
-        self.ax2.yaxis.get_major_locator().numticks = 3
-        self.ax2.set_ylim((1e-6,1e3))
-        ymin, ymax = self.ax2.get_ylim()
-        if(ymax > 1e3):
-            self.ax2.set_ylim((ymin,1e3))
-        # xi lines
-        self.plot_xi_lines()
-        # x and y labels, and title
-        self.ax1.get_xaxis().set_ticklabels([])
-        self.ax1.get_xaxis().set_visible(False)
-        self.ax2.set_xlabel(r'$x$', fontsize=30)
-        shift_text = r'$\int \mathrm{d} y \, K(x,y,\xi) H(y)$'
-        self.ax1.set_ylabel(shift_text, fontsize=30)
-        self.ax2.set_ylabel(r'error (\%)', fontsize=34)
-        # legend
-        _ = self.ax1.legend(prop = { 'size' : 24 })
-        # Do we scale it...?
-        if(self.symlog):
-            self.ax1.set_xscale('symlog', linthresh=self.xi)
-            self.ax2.set_xscale('symlog', linthresh=self.xi)
-        self.ax1.set_xlim((-1,1))
-        self.ax2.set_xlim((-1,1))
-        # the end
-        self.fig.show()
-        return
+def _plot_xi_lines(ax, xi):
+    ymin, ymax = ax.get_ylim()
+    ax.vlines( xi, ymin, ymax, color='tab:gray', linewidth=1)
+    ax.vlines(-xi, ymin, ymax, color='tab:gray', linewidth=1)
+    ax.set_ylim((ymin,ymax))
+    return

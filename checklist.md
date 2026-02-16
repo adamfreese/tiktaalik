@@ -4,10 +4,12 @@
 [ ] Wilson coefficients
     - [x] LO Wilson coefficients for DVCS
     - [ ] NLO Wilson coefficients for DVCS
+        - [x] Quark NLO coefficient
+        - [ ] Gluon NLO coefficient
 [x] deprecate Evolver class
 [ ] benchmark module
     - [x] shift benchmarks
     - [x] streamline benchmark plot class
-    - [ ] benchmarks for Wilson coefficients
+    - [x] benchmarks for Wilson coefficients
     - [ ] polynomiality benchmarks
 [ ] new example codes

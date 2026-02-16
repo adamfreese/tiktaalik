@@ -46,7 +46,7 @@ module continuum_wilson
         real(dp), intent(in) :: xi, Q2
         logical,  intent(in) :: nlo
         complex(dp) :: cff
-        ! TODO
+        !
         real(dp) :: ReCFF1, ImCFF1
         ReCFF1 = convolve(gpd, re_Cg1_dvcs_reg, re_Cg1_dvcs_sub, re_Cg1_dvcs_cst, xi)
         ImCFF1 = convolve(gpd, im_Cg1_dvcs_reg, im_Cg1_dvcs_sub, im_Cg1_dvcs_cst, xi)

@@ -63,7 +63,6 @@ module matrices_wilson
         real(dp) :: Q2(nQ2)
         integer  :: iq
         Q2 = get_Q2(nQ2)
-        ! For now, only LO
         M0 = re_Cq0_dvcs + i_*im_Cq0_dvcs
         M1 = re_Cq1_dvcs + i_*im_Cq1_dvcs
         !$OMP PARALLEL DO
