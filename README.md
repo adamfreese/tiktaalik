@@ -67,6 +67,37 @@ is numerically stable down to xi=5e-3
 
 # Recent updates
 
+## February XX, 2026
+
+(TODO)
+
+A major update has been pushed with the following changes:
+
+- The x spacing with `grid_type=2` has been changed, so that if `nx` is
+one more than a multiple of four (e.g., 41, 81, 101, etc.), the points
+`x=xi` and `x=-xi` will be present on the grid.
+- The interface for setting matrix parameters has changed:
+  - One should call `tiktaalik.matrices.set_x_xi_grids` to set the desired
+  `x` and `xi` grids, and `tiktaalik.matrices.set_Q2_grid` to set the `Q2` grid.
+  - Similarly, one can obtain the current `x`, `xi` and `Q2` grids via
+  `tiktaalik.matrices.get_x_grid`, `tiktaalik.matrices.get_xi_array`
+  and `tiktaalik.matrices.get_Q2_array` respectively.
+  - No methods need to be called to initialize kernels or matrices.
+  These will be initialized as needed when one tries to retrieve
+  an evolution matrix or kernel.
+- LO and NLO Wilson coefficients for DVCS have been incorporated.
+- The Evolver class was deprecated and removed.
+Conversions between evolution and physical flavor bases should be done
+by the user (and likely exist already in their analysis code).
+tiktaalik is instead specialized to generating evolution matrices
+in the evolution basis.
+- A benchmarks module was created for users to easily test the
+accuracy of the finite element method used by tiktaalik.
+
+TODO for this push still:
+[ ] New example scripts demonstrating the new features and interfaces
+[ ] Polynomiality benchmarks
+
 ## May 13, 2025
 
 The adaptive integration was simplified, and NLO evolution is trustworthy
