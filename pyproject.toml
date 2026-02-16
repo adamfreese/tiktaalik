@@ -15,7 +15,7 @@ build.verbose = true
 
 [project]
 name = "tiktaalik"
-version = "1.0.0"
+version = "0.4.0"
 description = "Finite element code for evolution of generalized parton distributions"
 authors = [
   {name = "Adam Freese", email = "afreese@jlab.org"},
