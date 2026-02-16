@@ -88,6 +88,7 @@ def shift_benchmark(key='NS', xi=0.1, nx=81, nlo=False, ns_type=1, grid_type=2):
     ax1.get_xaxis().set_visible(False)
     ax1.set_ylabel(r'$\int \mathrm{d} y \, K(x,y,\xi) H(y)$')
     ax2.set_ylabel(r'percent error')
+    _ = ax1.legend(prop = { 'size' : 17 })
     # Finish
     fig.show()
     return
@@ -111,7 +112,6 @@ def wilson_benchmark(
     # Retrieve coefficient matrix (interpixel method)
     C = _get_dvcs_coefficient(key=key, nlo=nlo)
     # Interpiixel CFF
-    #Hq = _dvcs_quark_combo(x, xi, t)
     gpd = _get_gpd_dvcs(x, xi, t, key=key)
     cff_pixel = np.einsum('ij,ji...->i...', C, gpd)[:,0]
     # Continuum CFF ("ground truth")
@@ -133,13 +133,14 @@ def wilson_benchmark(
     ReErr = 100*abs(np.real(cff_truth-cff_pixel) / np.real(cff_truth))
     ax2.plot(xi, ReErr, '+', label=r'Error (real)', color='xkcd:forest green')
     ax2.plot(xi, ImErr, 'x', label=r'Error (imag)', color='xkcd:rich purple')
-    # Finish
+    # Plot labels etc
     for ax in [ax1, ax2]:
         ax.set_xscale('log')
     ax2.set_xlabel(r'$\xi$')
     ax1.set_ylabel(r'$\mathcal{H}(\xi)$')
     ax2.set_ylabel(r'percent error')
-    _ = ax1.legend(prop = { 'size' : 17 }, loc=1)
+    _ = ax1.legend(prop = { 'size' : 17 })
+    # Finish
     fig.show()
     return
 

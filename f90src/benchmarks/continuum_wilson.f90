@@ -6,7 +6,7 @@
 ! Created on July 25, 2025.
 
 module continuum_wilson
-  use alpha_qcd,     only: get_alpha_QCD, get_neff
+  use alpha_qcd,     only: get_alpha_QCD, get_neff, get_charges_squared
   use constants,     only: i_, pi
   use integration,   only: adaptive_integrate2
   use kernels_common
@@ -52,7 +52,7 @@ module continuum_wilson
         ImCFF1 = convolve(gpd, im_Cg1_dvcs_reg, im_Cg1_dvcs_sub, im_Cg1_dvcs_cst, xi)
         cff = 0.0_dp
         if(nlo) then
-          cff = cff + get_alpha_QCD(Q2)/(4.*pi)*( ReCFF1 + i_*ImCFF1 )
+          cff = cff + get_charges_squared(Q2)*get_alpha_QCD(Q2)/(4.*pi)*( ReCFF1 + i_*ImCFF1 )
         endif
     end function continuum_cff_g
 

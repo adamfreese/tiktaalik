@@ -126,4 +126,23 @@ module alpha_qcd
         endif
     end function get_neff
 
+    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ! Sum of squares of active charges
+
+    function get_charges_squared(Q2) result(sigma)
+        real(dp), intent(in) :: Q2
+        real(dp) :: sigma
+        !
+        integer :: nfl
+        nfl = get_neff(Q2)
+        select case(nfl)
+        case(3)
+          sigma = 2./3.
+        case(4)
+          sigma = 10./9.
+        case(5)
+          sigma = 11./9.
+        end select
+    end function get_charges_squared
+
 end module alpha_qcd

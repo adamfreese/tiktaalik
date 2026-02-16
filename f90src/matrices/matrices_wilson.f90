@@ -7,7 +7,7 @@
 ! Part of a breakup of the previous matevo.f90 file into smaller chunks
 
 module matrices_wilson
-  use alpha_qcd, only: get_alpha_QCD, get_neff
+  use alpha_qcd, only: get_alpha_QCD, get_neff, get_charges_squared
   use constants, only: i_, pi
   use kernels_common
   use matrices_common
@@ -76,23 +76,6 @@ module matrices_wilson
         !$OMP END PARALLEL DO
     end function Cq_dvcs
 
-    function eq2(Q2) result(sigma)
-        ! TODO: put somewhere else, in QCD module maybe
-        real(dp), intent(in) :: Q2
-        real(dp) :: sigma
-        !
-        integer :: nfl
-        nfl = get_neff(Q2)
-        select case(nfl)
-        case(3)
-          sigma = 2./3.
-        case(4)
-          sigma = 10./9.
-        case(5)
-          sigma = 11./9.
-        end select
-    end function eq2
-
     function CG_dvcs(nxi, nx, nQ2, l_nlo) result(M)
         integer,  intent(in) :: nxi, nx, nQ2
         logical,  intent(in) :: l_nlo
@@ -106,7 +89,7 @@ module matrices_wilson
         if(l_nlo) then
           !$OMP PARALLEL DO
           do iq=1, nQ2, 1
-            M(:,:,iq) = eq2(Q2(iq))*get_alpha_QCD(Q2(iq))/(4.*pi)*M1
+            M(:,:,iq) = get_charges_squared(Q2(iq))*get_alpha_QCD(Q2(iq))/(4.*pi)*M1
           end do
           !$OMP END PARALLEL DO
         else

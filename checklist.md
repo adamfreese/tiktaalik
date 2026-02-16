@@ -13,7 +13,8 @@
     - [x] benchmarks for Wilson coefficients
     - [ ] polynomiality benchmarks
 [ ] Investigations
-    - [ ] NLO gluon Wilson coefficient:
+    - [x] NLO gluon Wilson coefficient:
       is the poor accuracy in the matrices, or the continuum?
+      (was a missing eq2 factor in the continuum formula)
 [ ] New example codes
 [ ] Better documentation
