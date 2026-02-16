@@ -111,8 +111,9 @@ def wilson_benchmark(
     # Retrieve coefficient matrix (interpixel method)
     C = _get_dvcs_coefficient(key=key, nlo=nlo)
     # Interpiixel CFF
-    Hq = _dvcs_quark_combo(x, xi, t)
-    cff_pixel = np.einsum('ij,ji...->i...', C, Hq)[:,0]
+    #Hq = _dvcs_quark_combo(x, xi, t)
+    gpd = _get_gpd_dvcs(x, xi, t, key=key)
+    cff_pixel = np.einsum('ij,ji...->i...', C, gpd)[:,0]
     # Continuum CFF ("ground truth")
     cff_truth = _get_continuum_cff(xi, key=key, Q2=4, nlo=nlo)
     # Set up plot
@@ -177,6 +178,20 @@ def _get_gpd(x, xi=0.1, key='NS'):
         H = _gluon_gpd(x, xi)
     elif(key[1]=='q'):
         H = _singlet_gpd(x, xi)
+    else:
+        raise ValueError("Key "+key+" unrecognized.")
+    H[np.isnan(H)] = 0
+    H[np.isinf(H)] = 0
+    return H
+
+def _get_gpd_dvcs(x, xi, t, key='q'):
+    H = np.zeros(x.shape)
+    if(key=='g'):
+        H = _gluon_gpd_with_t(x, xi, t)
+    elif(key=='q'):
+        H = _dvcs_quark_combo(x, xi, t)
+    else:
+        raise ValueError("Key "+key+" unrecognized.")
     H[np.isnan(H)] = 0
     H[np.isinf(H)] = 0
     return H
@@ -215,6 +230,9 @@ def _singlet_gpd(x, xi):
 
 def _gluon_gpd(x, xi):
     return model.Hg(x,xi,0)[:,0,0]
+
+def _gluon_gpd_with_t(x, xi,t):
+    return model.Hg(x,xi,t)
 
 def _dvcs_quark_combo(x, xi, t):
     H = (

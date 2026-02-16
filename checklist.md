@@ -1,15 +1,19 @@
 # Checklist
 
 [x] x=xi and x=-xi on log-linear type grids
-[ ] Wilson coefficients
+[x] Wilson coefficients
     - [x] LO Wilson coefficients for DVCS
-    - [ ] NLO Wilson coefficients for DVCS
+    - [x] NLO Wilson coefficients for DVCS
         - [x] Quark NLO coefficient
-        - [ ] Gluon NLO coefficient
+        - [x] Gluon NLO coefficient
 [x] deprecate Evolver class
 [ ] benchmark module
     - [x] shift benchmarks
     - [x] streamline benchmark plot class
     - [x] benchmarks for Wilson coefficients
     - [ ] polynomiality benchmarks
-[ ] new example codes
+[ ] Investigations
+    - [ ] NLO gluon Wilson coefficient:
+      is the poor accuracy in the matrices, or the continuum?
+[ ] New example codes
+[ ] Better documentation
