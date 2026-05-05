@@ -34,6 +34,12 @@ module convolution
         shift = shift + pixel_conv_reg(Kreg, xi, N, i, j, grid_type)
         shift = shift + pixel_conv_pls(Kpls, xi, N, i, j, grid_type)
         shift = shift + pixel_conv_cst(Kcst, xi, N, i, j, grid_type)
+        ! Singularity correction
+        if(shift > HUGE(dp) .or. shift < -HUGE(dp)) then
+          shift = 0.0_dp
+        elseif(shift /= shift) then
+          shift = 0.0_dp
+        endif
     end function pixel_conv
 
     function pixel_conv_reg(kernel, xi, n_pixels, i, j, grid_type) result(shift)
