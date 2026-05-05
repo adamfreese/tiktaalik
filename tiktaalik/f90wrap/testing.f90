@@ -21,22 +21,6 @@ module dummy
   contains
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ! Grab an interpixel
-
-    subroutine interpixel_wrap(n_pixels, i_pixel, nx, x, xi, grid_type, y)
-        integer,  parameter   :: dp = kind(1d0)
-        integer,  intent(in)  :: n_pixels, i_pixel, nx, grid_type
-        real(dp), intent(in)  :: x(nx), xi
-        real(dp), intent(out) :: y(nx)
-        !
-        integer :: ix
-        !call initialize_lagrange_weights(n_pixels, 6)
-        do ix=1, nx, 1
-          y(ix) = interpixel(n_pixels, i_pixel, x(ix), xi, grid_type)
-        end do
-    end subroutine interpixel_wrap
-
-    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! Test CFFs
 
     subroutine test_cff_q(nxi, xi, Q2, nlo, v)

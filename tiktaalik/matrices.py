@@ -72,6 +72,18 @@ def get_Q2_array():
     Q2 = f90src.get_q2_wrap(nQ2)
     return Q2
 
+def get_nx():
+    nx = _matrix_dict['nx']
+    return nx
+
+def get_nxi():
+    nxi = _matrix_dict['nxi']
+    return nxi
+
+def get_nQ2():
+    nQ2 = _matrix_dict['nQ2']
+    return nQ2
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Methods for the user to set x, xi and Q2 grids
 
@@ -127,15 +139,29 @@ def set_Q2_grid(Q2):
 
 def do_lo_evolution():
     ''' Tell tiktaalik to do evolution at leading order (LO). '''
-    _matrix_dict['nlo'] = False
+    _matrix_dict['nlo_evo'] = False
     _matrix_dict['evomat_init'] = False
     return
 
 def do_nlo_evolution():
     ''' Tell tiktaalik to do evolution at next-to-leading order (NLO). '''
-    _matrix_dict['nlo'] = True
+    _matrix_dict['nlo_evo'] = True
     _matrix_dict['evomat_init'] = False
     return
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Method to get an interpixel
+
+def interpixel(i_pixel, x, xi):
+    ''' Given arbitrary x (potentially off of the grid),
+    return the ith interpixel of the current x grid.
+    i_pixel uses 0-indexing, so 0 <= i_pixel < n_pixels.
+    '''
+    n_pixels = f90src.get_nx_wrap()
+    assert(i_pixel >= 0)
+    assert(i_pixel < n_pixels)
+    grid_type = _matrix_dict['grid_type']
+    return f90src.interpixel_wrap(n_pixels, i_pixel, x, xi, grid_type)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Routines to obtain evolution kernel matrices

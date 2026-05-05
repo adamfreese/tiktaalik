@@ -18,8 +18,21 @@ module dummy
   contains
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ! Pixelspace
+    ! Interpixel
 
+    subroutine interpixel_wrap(n_pixels, i_pixel, nx, x, xi, grid_type, y)
+        integer,  parameter   :: dp = kind(1d0)
+        integer,  intent(in)  :: n_pixels, i_pixel, nx, grid_type
+        real(dp), intent(in)  :: x(nx), xi
+        real(dp), intent(out) :: y(nx)
+        !
+        integer :: ix
+        do ix=1, nx, 1
+          y(ix) = interpixel(n_pixels, i_pixel, x(ix), xi, grid_type)
+        end do
+    end subroutine interpixel_wrap
+
+    ! TODO : deprecate
     subroutine pixelspace_wrap(nx, xi, grid_type, x)
         integer,  parameter   :: dp = kind(1d0)
         integer,  intent(in)  :: nx, grid_type
