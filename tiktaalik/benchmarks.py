@@ -71,10 +71,10 @@ def shift_benchmark(key='NS', xi=0.1, nx=81, nlo=False, ns_type=1, grid_type=2):
             figsize=(8,8),
             layout = 'constrained'
             )
-    ax1.plot(x_truth, dH_truth, '-', label=r'Truth',     color='xkcd:lavender')
-    ax1.plot(x_pixel, dH_pixel, '+', label=r'tiktaalik', color='xkcd:forest green')
+    ax1.plot(x_truth, dH_truth, '-', label=r'Truth',     color='tab:orange')
+    ax1.plot(x_pixel, dH_pixel, '+', label=r'tiktaalik', color='tab:blue')
     # Error
-    ax2.plot(x_pixel, error, '+', label=r'tiktaalik', color='xkcd:forest green')
+    ax2.plot(x_pixel, error, '+', label=r'tiktaalik', color='tab:blue')
     # Plot labels etc
     ax2.set_ylim((1e-6,1e3))
     ax2.plot(x_truth, x_truth*0+1, linewidth=1, color='tab:gray')
@@ -88,10 +88,10 @@ def shift_benchmark(key='NS', xi=0.1, nx=81, nlo=False, ns_type=1, grid_type=2):
     ax1.get_xaxis().set_visible(False)
     ax1.set_ylabel(r'$\int \mathrm{d} y \, K(x,y,\xi) H(y)$')
     ax2.set_ylabel(r'percent error')
-    _ = ax1.legend(prop = { 'size' : 17 })
-    # Finish
-    fig.show()
-    return
+    legend = ax1.legend(prop = { 'size' : 26 })
+    legend.get_frame().set_facecolor('#f8f8f8')
+    fig.patch.set_alpha(0)
+    return fig
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Wilson coefficient benchmark
@@ -139,10 +139,10 @@ def wilson_benchmark(
     ax2.set_xlabel(r'$\xi$')
     ax1.set_ylabel(r'$\mathcal{H}(\xi)$')
     ax2.set_ylabel(r'percent error')
-    _ = ax1.legend(prop = { 'size' : 17 })
-    # Finish
-    fig.show()
-    return
+    legend = ax1.legend(prop = { 'size' : 26 })
+    legend.get_frame().set_facecolor('#f8f8f8')
+    fig.patch.set_alpha(0)
+    return fig, ax1, ax2
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Auxiliary functions
