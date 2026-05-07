@@ -67,7 +67,7 @@ is numerically stable down to xi=5e-3
 
 # Recent updates
 
-## February XX, 2026
+## May XX, 2026
 
 (TODO)
 
@@ -97,6 +97,14 @@ accuracy of the finite element method used by tiktaalik.
 TODO for this push still:
 [ ] New example scripts demonstrating the new features and interfaces
 [ ] Polynomiality benchmarks
+
+## May 7, 2026
+
+The legacy branch has been created to freeze in the interface that
+was present before a major upgrade to occur in May 2026.
+Any users who have created scripts relying on the interface
+as it was before the upgrade can still obtain the older version of the code
+from the legacy branch.
 
 ## May 13, 2025
 
