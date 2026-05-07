@@ -67,6 +67,14 @@ is numerically stable down to xi=5e-3
 
 # Recent updates
 
+### May 7, 2026
+
+The legacy branch has been created to freeze in the interface that
+was present before a major upgrade to occur in May 2026.
+Any users who have created scripts relying on the interface
+as it was before the upgrade can still obtain the older version of the code
+from the legacy branch.
+
 ### May 13, 2025
 
 The adaptive integration was simplified, and NLO evolution is trustworthy
