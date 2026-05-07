@@ -35,11 +35,7 @@ module pixelation
         real(dp) :: eta
         ! Interpolate in the pulled back eta space
         eta = pull_back(x, xi, n_pixels, grid_type)
-        if(grid_type==1) then
-          call interpolate_lagrange_pixel_legacy(i, eta, f)
-        else
-          call interpolate_lagrange_pixel(i, eta, f)
-        endif
+        call interpolate_lagrange_pixel(i, eta, f)
     end function interpixel
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -81,8 +77,7 @@ module pixelation
         iLoc = locate(x, Nx_cache)
         iStart = min( max(iLoc-(N_order_cache-0)/2, 0), Nx_cache-1-N_order_cache )
         iEnd   = iStart + N_order_cache
-        ! New hack for grid_type=2 ... avoid DGLAP-ERBL crossing
-        ! TODO: clean up later
+        ! Treat DGALP-ERBL boundary as edge points
         if(iStart < (nx_cache-1)/4 .and. iEnd > (nx_cache-1)/4) then
           if(iLoc < (nx_cache-1)/4) then
             iEnd = (nx_cache-1)/4
@@ -107,25 +102,6 @@ module pixelation
         x0 = -1. + real(2*iStart)/real(Nx_cache-1)
         f = lagrange_basis(x, x0, ix-iStart)
     end subroutine interpolate_lagrange_pixel
-
-    subroutine interpolate_lagrange_pixel_legacy(ix, x, f)
-        ! Piecewise polynomial interpolation from connecting Newton polynomials.
-        real(dp), intent(in)  :: x
-        integer,  intent(in)  :: ix
-        real(dp), intent(out) :: f
-        !
-        integer :: iLoc, iStart, iEnd
-        real(dp) :: x0
-        iLoc = locate(x, Nx_cache)
-        iStart = min( max(iLoc-(N_order_cache-1)/2, 0), Nx_cache+1-N_order_cache )
-        iEnd   = iStart + N_order_cache
-        if(ix < iStart .or. ix > iEnd) then
-          f = 0.0_dp
-          return
-        endif
-        x0 = -1. + real(2*iStart)/real(Nx_cache-1)
-        f = lagrange_basis(x, x0, ix-iStart)
-    end subroutine interpolate_lagrange_pixel_legacy
 
     function lagrange_basis(x, x0, i) result(f)
         real(dp), intent(in) :: x, x0
