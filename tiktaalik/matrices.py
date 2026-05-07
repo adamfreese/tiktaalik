@@ -25,7 +25,7 @@ _matrix_dict = {
         'xi'  : np.linspace(0.1, 0.5, 5),
         'nx'  : 80,
         'grid_type' : 1,
-        'lagrange_order' : 5,
+        'lagrange_order' : 6,
         'kernel_init' : False,
         'evomat_init' : False,
         'wilson_init' : False,
