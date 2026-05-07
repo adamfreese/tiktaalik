@@ -83,6 +83,8 @@ def shift_benchmark(key='NS', xi=0.1, nx=81, nlo=False, ns_type=1, grid_type=2):
         ax.set_xlim((-1,1))
         if(grid_type==2):
             ax.set_xscale('symlog', linthresh=xi)
+    if(grid_type==2):
+        ax2.set_xticks(ax.get_xticks()[::2])
     ax2.set_yscale('log')
     ax2.set_xlabel(r'$x$')
     ax1.get_xaxis().set_visible(False)
@@ -90,6 +92,11 @@ def shift_benchmark(key='NS', xi=0.1, nx=81, nlo=False, ns_type=1, grid_type=2):
     ax2.set_ylabel(r'percent error')
     legend = ax1.legend(prop = { 'size' : 26 })
     legend.get_frame().set_facecolor('#f8f8f8')
+    bbox = dict(facecolor='#f8f8f8', alpha=0.76, edgecolor='gray', boxstyle='round,pad=0.2')
+    ax1.annotate(
+            r'\textbf{'+key+r'}', xy=(0.03,0.05), xycoords='axes fraction',
+            bbox=bbox
+            )
     fig.patch.set_alpha(0)
     return fig
 
@@ -124,25 +131,35 @@ def wilson_benchmark(
             figsize=(8,8),
             layout = 'constrained'
             )
-    ax1.plot(xi, xi*np.real(cff_truth), '-',  label=r'Truth     (real)', color='xkcd:electric blue')
-    ax1.plot(xi, xi*np.real(cff_pixel), '+',  label=r'tiktaalik (real)', color='xkcd:forest green')
-    ax1.plot(xi, xi*np.imag(cff_truth), '--', label=r'Truth     (imag)', color='xkcd:ochre')
-    ax1.plot(xi, xi*np.imag(cff_pixel), 'x',  label=r'tiktaalik (imag)', color='xkcd:rich purple')
+    ax1.plot(xi, xi*np.real(cff_truth), '-',  label=r'Truth     (real)', color='tab:blue')
+    ax1.plot(xi, xi*np.real(cff_pixel), '+',  label=r'tiktaalik (real)', color='tab:orange')
+    ax1.plot(xi, xi*np.imag(cff_truth), '--', label=r'Truth     (imag)', color='tab:green')
+    ax1.plot(xi, xi*np.imag(cff_pixel), 'x',  label=r'tiktaalik (imag)', color='tab:purple')
     # Error
     ImErr = 100*abs(np.imag(cff_truth-cff_pixel) / np.imag(cff_truth))
     ReErr = 100*abs(np.real(cff_truth-cff_pixel) / np.real(cff_truth))
-    ax2.plot(xi, ReErr, '+', label=r'Error (real)', color='xkcd:forest green')
-    ax2.plot(xi, ImErr, 'x', label=r'Error (imag)', color='xkcd:rich purple')
+    ax2.plot(xi, ReErr, '+', label=r'Error (real)', color='tab:orange')
+    ax2.plot(xi, ImErr, 'x', label=r'Error (imag)', color='tab:purple')
     # Plot labels etc
     for ax in [ax1, ax2]:
         ax.set_xscale('log')
     ax2.set_xlabel(r'$\xi$')
-    ax1.set_ylabel(r'$\mathcal{H}(\xi)$')
+    ax1.set_ylabel(r'$\mathcal{H}_{'+key+r'}(\xi)$')
     ax2.set_ylabel(r'percent error')
     legend = ax1.legend(prop = { 'size' : 26 })
     legend.get_frame().set_facecolor('#f8f8f8')
+    ax1.get_xaxis().set_visible(False)
+    if(nlo):
+        lo_or_nlo = 'NLO'
+    else:
+        lo_or_nlo = 'LO'
+    bbox = dict(facecolor='#f8f8f8', alpha=0.76, edgecolor='gray', boxstyle='round,pad=0.2')
+    ax1.annotate(
+            r'\textbf{'+lo_or_nlo+r'}', xy=(0.03,0.05), xycoords='axes fraction',
+            bbox=bbox
+            )
     fig.patch.set_alpha(0)
-    return fig, ax1, ax2
+    return fig
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Auxiliary functions
