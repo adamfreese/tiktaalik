@@ -118,6 +118,7 @@ module kernels_common
         real(dp) :: f
         !
         f = X/Y / (Y-X)
+        if(X==Y) f = 0.0_dp
     end function QQ_f_b
 
     function QQ_f_c(X,Y) result(f)
@@ -335,6 +336,7 @@ module kernels_common
         real(dp) :: f
         !
         f = X**2/Y**2 / (Y-X)
+        if(X==Y) f = 0.0_dp
     end function GG_f_b
 
     function GG_f_c(X,Y) result(f)
