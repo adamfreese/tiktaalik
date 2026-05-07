@@ -22,7 +22,7 @@ def interpixel_demo_plots():
     xi = 0.3
     grid_type = 2
     # Set the grids used by tiktaalik
-    tk.matrices.set_x_xi_grids(n_pixels, xi, grid_type=grid_type, lagrange_order=5)
+    tk.matrices.set_x_xi_grids(n_pixels, xi, grid_type=grid_type, lagrange_order=6)
     # Define a ground truth function using the GK model
     x_truth = np.linspace(-1, 1, nx)
     y_truth = tk.model.Hu(x_truth, xi, 0)[:,0,0]
@@ -85,30 +85,13 @@ def interpixel_demo_plots():
         figs[n].savefig('interpixeldemo{:d}.pdf'.format(n+1))
     return
 
-def _color(n):
-    colors = [
-            'tab:blue',
-            'tab:orange',
-            'tab:green',
-            'tab:red',
-            'tab:purple',
-            'tab:brown',
-            'tab:pink',
-            'tab:olive',
-            'tab:cyan'
-            ]
-    Nmax = len(colors) - 1
-    if(n > Nmax):
-        return _color(n-Nmax)
-    return colors[n]
-
 def interpixel_demo_alt():
     n_pixels = 13
     nx = 666
     xi = 0.3
     grid_type = 2
     # Set the grids used by tiktaalik
-    tk.matrices.set_x_xi_grids(n_pixels, xi, grid_type=grid_type, lagrange_order=5)
+    tk.matrices.set_x_xi_grids(n_pixels, xi, grid_type=grid_type, lagrange_order=6)
     # Define a ground truth function using the GK model
     x_truth = np.linspace(-1, 1, nx)
     y_truth = tk.model.Hu(x_truth, xi, 0)[:,0,0]
@@ -171,16 +154,18 @@ def interpixel_demo_alt():
         figs[n].savefig('interpixeldemo{:d}.pdf'.format(n+1))
     return
 
-
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Visualization of matrix evolution
 
+
+
+
 def evomatrix_demo():
-    n_pixels = 33
+    n_pixels = 29
     xi = 0.5
     grid_type = 1
     # Set the grids used by tiktaalik, and evolution order
-    tk.matrices.set_x_xi_grids(n_pixels, xi, grid_type=grid_type, lagrange_order=5)
+    tk.matrices.set_x_xi_grids(n_pixels, xi, grid_type=grid_type, lagrange_order=6)
     tk.matrices.set_Q2_grid(np.geomspace(4,17,11))
     tk.matrices.do_nlo_evolution()
     # Create initial and final GPD, along with matrix
@@ -519,4 +504,46 @@ def _plot_xi_lines(ax, xi):
     ax.vlines( xi, ymin, ymax, color='tab:gray', linewidth=1)
     ax.vlines(-xi, ymin, ymax, color='tab:gray', linewidth=1)
     ax.set_ylim((ymin,ymax))
+    return
+
+def _color(n):
+    colors = [
+            'tab:blue',
+            'tab:orange',
+            'tab:green',
+            'tab:red',
+            'tab:purple',
+            'tab:brown',
+            'tab:pink',
+            'tab:olive',
+            'tab:cyan'
+            ]
+    Nmax = len(colors) - 1
+    if(n > Nmax):
+        return _color(n-Nmax)
+    return colors[n]
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Misc thingies
+
+def interpixel_symmetry_test(i):
+    n_pixels = 29
+    xi = 0.5
+    grid_type = 1
+    tk.matrices.set_x_xi_grids(n_pixels, xi, grid_type=grid_type, lagrange_order=6)
+    #
+    nx = 666
+    x_truth = np.linspace(-1, 1, nx)
+    y_inter_1 = np.zeros((n_pixels, nx))
+    y_inter_2 = np.zeros((n_pixels, nx))
+    for i_pixel in range(n_pixels):
+        y_inter_1[i_pixel,:] = tk.matrices.interpixel(i_pixel, x_truth, xi)
+        y_inter_2[i_pixel,:] = tk.matrices.interpixel(n_pixels-i_pixel-1, -x_truth, xi)
+    #
+    fig = plt.figure(figsize=(8,6), layout='constrained')
+    ax = plt.subplot(1,1,1)
+    ax.plot(x_truth, y_inter_1[i], '--')
+    ax.plot(x_truth, y_inter_2[i], ':')
+    ax.plot(x_truth, y_inter_1[i]-y_inter_2[i], '-')
+    fig.savefig('test.pdf')
     return
