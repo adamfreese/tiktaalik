@@ -19,20 +19,6 @@ from .f90wrap.model import dummy as f90src
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Model GPDs
 
-def H_singlet(x, xi, t):
-    if(np.isscalar(x)):
-        x = np.array([x])
-    if(np.isscalar(xi)):
-        xi = np.array([xi])
-    if(np.isscalar(t)):
-        t = np.array([t])
-    f = (
-              Hu(x,xi,t) - Hu(-x,xi,t)
-            + Hd(x,xi,t) - Hd(-x,xi,t)
-            + Hs(x,xi,t) - Hs(-x,xi,t)
-            )
-    return f
-
 def Hu(x, xi, t):
     if(np.isscalar(x)):
         x = np.array([x])
@@ -84,3 +70,25 @@ def Hg(x, xi, t):
     else:
         H = f90src.hg_wrap(x,xi,t)
     return H
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Helpful quark combinations
+
+def H_singlet(x, xi, t):
+    if(np.isscalar(x)):
+        x = np.array([x])
+    if(np.isscalar(xi)):
+        xi = np.array([xi])
+    if(np.isscalar(t)):
+        t = np.array([t])
+    f = (
+              Hu(x,xi,t) - Hu(-x,xi,t)
+            + Hd(x,xi,t) - Hd(-x,xi,t)
+            + Hs(x,xi,t) - Hs(-x,xi,t)
+            )
+    return f
+
+def H3plus(x, xi, t):
+    Hup = Hu(x, xi, t) - Hu(-x, xi, t)
+    Hdp = Hd(x, xi, t) - Hd(-x, xi, t)
+    return Hup - Hdp
