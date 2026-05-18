@@ -31,6 +31,8 @@ module wilson_dvcs
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! Leading order
 
+    ! Vector type ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     function re_Cq0_dvcs_cst(xi) result(w)
         real(dp), intent(in) :: xi
         real(dp) :: w
@@ -52,14 +54,39 @@ module wilson_dvcs
         w = pi
     end function im_Cq0_dvcs_cst
 
+    ! Axial type ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    function re_Ctilq0_dvcs_cst(xi) result(w)
+        real(dp), intent(in) :: xi
+        real(dp) :: w
+        !
+        w = -log((1.+xi)/(1.-xi))
+    end function re_Ctilq0_dvcs_cst
+
+    function re_Ctilq0_dvcs_sub(x,xi) result(w)
+        real(dp), intent(in) :: x, xi
+        real(dp) :: w
+        !
+        w = -1./(xi-x)
+    end function re_Ctilq0_dvcs_sub
+
+    function im_Ctilq0_dvcs_cst(xi) result(w)
+        real(dp), intent(in) :: xi
+        real(dp) :: w
+        !
+        w = -pi
+    end function im_Ctilq0_dvcs_cst
+
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! Next-to-leading order, quark part
+
+    ! Vector type ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     function re_Cq1_dvcs_reg(x,xi) result(w)
         real(dp), intent(in) :: x, xi
         real(dp) :: w
         !
-        w = 3.*CF * abslog(0.5*(x+xi)/xi) / (xi-x)
+        w = -3.*CF * abslog(0.5*(xi-x)/xi) / (xi+x)
     end function re_Cq1_dvcs_reg
 
     function re_Cq1_dvcs_sub(x,xi) result(w)
@@ -101,20 +128,67 @@ module wilson_dvcs
         w = w - 9.*CF*im_Cq0_dvcs_cst(xi)
     end function im_Cq1_dvcs_cst
 
+    ! Axial type ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    function re_Ctilq1_dvcs_reg(x,xi) result(w)
+        real(dp), intent(in) :: x, xi
+        real(dp) :: w
+        !
+        w = CF * abslog(0.5*(xi-xi)/xi) / (xi+x)
+    end function re_Ctilq1_dvcs_reg
+
+    function re_Ctilq1_dvcs_sub(x,xi) result(w)
+        real(dp), intent(in) :: x, xi
+        real(dp) :: w
+        !
+        w = -CF * log2(0.5*(xi-x)/xi)/(xi-x)
+        w = w - 9.*CF*re_Ctilq0_dvcs_sub(x,xi)
+    end function re_Ctilq1_dvcs_sub
+
+    function re_Ctilq1_dvcs_cst(xi) result(w)
+        real(dp), intent(in) :: xi
+        real(dp) :: w
+        !
+        w = -CF*(log(0.5*(1.+xi)/xi)**3 - log(0.5*(1.-xi)/xi)**3)/3. 
+        w = w - CF*pi**2*log(0.5*(1.-xi)/xi)
+        w = w - 9.*CF*re_Ctilq0_dvcs_cst(xi)
+    end function re_Ctilq1_dvcs_cst
+
+    function im_Ctilq1_dvcs_reg(x,xi) result(w)
+        real(dp), intent(in) :: x, xi
+        real(dp) :: w
+        !
+        w = -CF * pi/(x+xi) * theta_step(x-xi)
+    end function im_Ctilq1_dvcs_reg
+
+    function im_Ctilq1_dvcs_sub(x,xi) result(w)
+        real(dp), intent(in) :: x, xi
+        real(dp) :: w
+        !
+        w = 2.*pi*abslog(0.5*(xi-x)/xi)/(xi-x) * theta_step(x-xi)
+    end function im_Ctilq1_dvcs_sub
+
+    function im_Ctilq1_dvcs_cst(xi) result(w)
+        real(dp), intent(in) :: xi
+        real(dp) :: w
+        !
+        w = -pi*(log2(0.5*(1.-xi)/xi) - pi**2/3.)
+        w = w - 9.*CF*im_Ctilq0_dvcs_cst(xi)
+    end function im_Ctilq1_dvcs_cst
+
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! Next-to-leading order, gluon part
+
+    ! Vector type ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    ! TODO: cross-check the formulas to follow
 
     function re_CG1_dvcs_reg(x,xi) result(w)
         ! Does not yet contain factor sum(eq**2)
         real(dp), intent(in) :: x, xi
         real(dp) :: w
-        real(dp) :: z, zbar
         !
-        zbar = 0.5*(x+xi)/xi
-        z = 0.5*(xi-x)/xi
-        !w = TF*( 4.*z*abslog(zbar) + 8.*abslog(zbar) - 2.*log2(zbar) ) / (xi-x)**2
-        ! New approach to A3
-        w = TF*( 4.*z*abslog(zbar) - 2.*log2(zbar) ) / (xi-x)**2
+        w = 2.*TF*( (xi+x)/xi*abslog(0.5*(xi-x)/xi) - log2(0.5*(xi-x)/xi) ) / (xi+x)**2
     end function re_CG1_dvcs_reg
 
     function re_CG1_dvcs_sub(x,xi) result(w)
@@ -123,7 +197,6 @@ module wilson_dvcs
         real(dp) :: w
         !
         w = TF * 2./xi*abslog(0.5*(xi-x)/xi) / (xi-x)
-        ! New approach to A3
         w = w + TF * 8.*abslog(0.5*(xi+x)/xi) / (xi-x)**2
     end function re_CG1_dvcs_sub
 
@@ -133,7 +206,6 @@ module wilson_dvcs
         real(dp) :: w
         !
         w = TF/xi * ( log2(0.5*(1.+xi)/xi) - log2(0.5*(1.-xi)/xi) + pi**2 )
-        ! New approach to A3
         w = w + TF/xi * 4. * ( log(0.5*(1.-xi)/xi)/(1.+xi) - log(0.5*(1.+xi)/xi)/(1.-xi) )
     end function re_CG1_dvcs_cst
 
@@ -141,13 +213,10 @@ module wilson_dvcs
         ! Does not yet contain factor sum(eq**2)
         real(dp), intent(in) :: x, xi
         real(dp) :: w
-        real(dp) :: z, zbar
         !
         w = 0.
         if(x > xi) then
-          z = 0.5*(xi-x)/xi
-          zbar = 0.5*(xi+x)/xi
-          w = - pi * TF*( 4.*zbar + 8. - 4.*abslog(z) ) / (xi+x)**2
+          w = - 2. * pi * TF*( (xi+x)/xi + 4. - 2.*abslog(0.5*(xi-x)/xi) ) / (xi+x)**2
         endif
     end function im_CG1_dvcs_reg
 
@@ -165,9 +234,79 @@ module wilson_dvcs
         real(dp) :: w
         !
         w = 2.*pi * TF/xi * log(0.5*(1.-xi)/xi)
-        ! New approach to A3 releaved a missing term...?
         w = w - TF/xi * 4.*pi
     end function im_CG1_dvcs_cst
+
+    ! Axial type ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    ! TODO: obtain the correct formulas
+
+    function re_CtilG1_dvcs_reg(x,xi) result(w)
+        ! TODO
+        ! Does not yet contain factor sum(eq**2)
+        real(dp), intent(in) :: x, xi
+        real(dp) :: w
+        real(dp) :: z, zbar
+        !
+        zbar = 0.5*(x+xi)/xi
+        z = 0.5*(xi-x)/xi
+        w = TF*( 4.*z*abslog(zbar) - 2.*log2(zbar) ) / (xi-x)**2
+    end function re_CtilG1_dvcs_reg
+
+    function re_CtilG1_dvcs_sub(x,xi) result(w)
+        ! TODO
+        ! Does not yet contain factor sum(eq**2)
+        real(dp), intent(in) :: x, xi
+        real(dp) :: w
+        !
+        w = TF * 2./xi*abslog(0.5*(xi-x)/xi) / (xi-x)
+        w = w + TF * 8.*abslog(0.5*(xi+x)/xi) / (xi-x)**2
+    end function re_CtilG1_dvcs_sub
+
+    function re_CtilG1_dvcs_cst(xi) result(w)
+        ! TODO
+        ! Does not yet contain factor sum(eq**2)
+        real(dp), intent(in) :: xi
+        real(dp) :: w
+        !
+        w = TF/xi * ( log2(0.5*(1.+xi)/xi) - log2(0.5*(1.-xi)/xi) + pi**2 )
+        w = w + TF/xi * 4. * ( log(0.5*(1.-xi)/xi)/(1.+xi) - log(0.5*(1.+xi)/xi)/(1.-xi) )
+    end function re_CtilG1_dvcs_cst
+
+    function im_CtilG1_dvcs_reg(x,xi) result(w)
+        ! TODO
+        ! Does not yet contain factor sum(eq**2)
+        real(dp), intent(in) :: x, xi
+        real(dp) :: w
+        real(dp) :: z, zbar
+        !
+        w = 0.
+        if(x > xi) then
+          z = 0.5*(xi-x)/xi
+          zbar = 0.5*(xi+x)/xi
+          w = - pi * TF*( 4.*zbar + 8. - 4.*abslog(z) ) / (xi+x)**2
+        endif
+    end function im_CtilG1_dvcs_reg
+
+    function im_CtilG1_dvcs_sub(x,xi) result(w)
+        ! TODO
+        ! Does not yet contain factor sum(eq**2)
+        real(dp), intent(in) :: x, xi
+        real(dp) :: w
+        !
+        w = - TF/xi * 2.*pi * theta_step(x-xi) / (xi-x)
+    end function im_CtilG1_dvcs_sub
+
+    function im_CtilG1_dvcs_cst(xi) result(w)
+        ! TODO
+        ! Does not yet contain factor sum(eq**2)
+        real(dp), intent(in) :: xi
+        real(dp) :: w
+        !
+        w = 2.*pi * TF/xi * log(0.5*(1.-xi)/xi)
+        w = w - TF/xi * 4.*pi
+    end function im_CtilG1_dvcs_cst
+
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! Matrix-building routines
