@@ -356,6 +356,34 @@ def dvcs_Cg(nlo=False):
     C = f90src.dvcs_cg_wrap(nx, nxi, nQ2, nlo)
     return C
 
+def dvcs_Ctilq(nlo=False):
+    # TODO: docstring
+    # Get the matrix dimensions
+    nx  = f90src.get_nx_wrap()
+    nxi = f90src.get_nxi_wrap()
+    nQ2 = f90src.get_nq2_wrap()
+    # Make sure the Wilson coefficient matrices are initialized
+    if(_matrix_dict['wilson_init']==False):
+        f90src.make_wilson_wrap(nQ2)
+        _matrix_dict['wilson_init'] = True
+    # Get the coefficients
+    C = f90src.dvcs_ctilq_wrap(nx, nxi, nQ2, nlo)
+    return C
+
+def dvcs_Ctilg(nlo=False):
+    # TODO: docstring
+    # Get the matrix dimensions
+    nx  = f90src.get_nx_wrap()
+    nxi = f90src.get_nxi_wrap()
+    nQ2 = f90src.get_nq2_wrap()
+    # Make sure the Wilson coefficient matrices are initialized
+    if(_matrix_dict['wilson_init']==False):
+        f90src.make_wilson_wrap(nQ2)
+        _matrix_dict['wilson_init'] = True
+    # Get the coefficients
+    C = f90src.dvcs_ctilg_wrap(nx, nxi, nQ2, nlo)
+    return C
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Q2 related methods
 
