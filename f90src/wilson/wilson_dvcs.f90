@@ -6,10 +6,10 @@
 ! created June 30, 2025.
 !
 ! Wilson coefficients taken from
-!   Braun, Ji and Schoenleber
-!   Physical Review Letters 129 (2022) 172001
-!   Braun:2022bpn
-!   arxiv:2207.06818
+!   Moutarde, Pire, Sabatie, Szymanowski and Wager
+!   Physical Review D 87 (2013) 054029
+!   Moutarde:2013qs
+!   arxiv:1301.3819
 
 module wilson_dvcs
   use constants,      only: pi, CF, TF
@@ -181,14 +181,15 @@ module wilson_dvcs
 
     ! Vector type ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    ! TODO: cross-check the formulas to follow
-
     function re_CG1_dvcs_reg(x,xi) result(w)
         ! Does not yet contain factor sum(eq**2)
         real(dp), intent(in) :: x, xi
         real(dp) :: w
         !
-        w = 2.*TF*( (xi+x)/xi*abslog(0.5*(xi-x)/xi) - log2(0.5*(xi-x)/xi) ) / (xi+x)**2
+        w = 2.*TF/xi*abslog(0.5*(xi-x)/xi) / (xi+x) ! from log term
+        w = w - 2*TF*log2(0.5*(xi-x)/xi) / (xi+x)**2 ! from log2 term
+        !!!w = 2.*TF*( (xi+x)/xi*abslog(0.5*(xi-x)/xi) - log2(0.5*(xi-x)/xi) ) / (xi+x)**2
+        ! confirmed; broken down further
     end function re_CG1_dvcs_reg
 
     function re_CG1_dvcs_sub(x,xi) result(w)
@@ -196,8 +197,9 @@ module wilson_dvcs
         real(dp), intent(in) :: x, xi
         real(dp) :: w
         !
-        w = TF * 2./xi*abslog(0.5*(xi-x)/xi) / (xi-x)
-        w = w + TF * 8.*abslog(0.5*(xi+x)/xi) / (xi-x)**2
+        w = TF * 2./xi*abslog(0.5*(xi-x)/xi) / (xi-x) ! from log term
+        w = w + TF * 8.*abslog(0.5*(xi+x)/xi) / (xi-x)**2 ! from log term
+        ! confirmed
     end function re_CG1_dvcs_sub
 
     function re_CG1_dvcs_cst(xi) result(w)
@@ -205,8 +207,10 @@ module wilson_dvcs
         real(dp), intent(in) :: xi
         real(dp) :: w
         !
-        w = TF/xi * ( log2(0.5*(1.+xi)/xi) - log2(0.5*(1.-xi)/xi) + pi**2 )
-        w = w + TF/xi * 4. * ( log(0.5*(1.-xi)/xi)/(1.+xi) - log(0.5*(1.+xi)/xi)/(1.-xi) )
+        w = TF/xi * ( log2(0.5*(1.+xi)/xi) - log2(0.5*(1.-xi)/xi) + pi**2 ) ! from log term (confirmed)
+        !w = w + TF/xi * 4. * ( log(0.5*(1.-xi)/xi)/(1.+xi) - log(0.5*(1.+xi)/xi)/(1.-xi) )
+        w = w + TF/xi * 8. * ( log(0.5*(1.-xi)/xi)/(1.+xi) - log(0.5*(1.+xi)/xi)/(1.-xi) ) ! from log term
+        ! found missing factor 2
     end function re_CG1_dvcs_cst
 
     function im_CG1_dvcs_reg(x,xi) result(w)
@@ -216,8 +220,12 @@ module wilson_dvcs
         !
         w = 0.
         if(x > xi) then
-          w = - 2. * pi * TF*( (xi+x)/xi + 4. - 2.*abslog(0.5*(xi-x)/xi) ) / (xi+x)**2
+          w = w + 4.*pi * TF / (xi+x)**2 * abslog(0.5*(xi-x)/xi) ! from log2 term
+          w = w - 2.*pi * TF / xi / (xi+x) ! from log term
+          w = w - 8.*pi * TF / (xi+x)**2 ! from log term, but extra sign flip for tilde
+          !!!w = - 2. * pi * TF*( (xi+x)/xi + 4. - 2.*abslog(0.5*(xi-x)/xi) ) / (xi+x)**2
         endif
+        ! confirmed; broken down further
     end function im_CG1_dvcs_reg
 
     function im_CG1_dvcs_sub(x,xi) result(w)
@@ -225,7 +233,8 @@ module wilson_dvcs
         real(dp), intent(in) :: x, xi
         real(dp) :: w
         !
-        w = - TF/xi * 2.*pi * theta_step(x-xi) / (xi-x)
+        w = - TF/xi * 2.*pi * theta_step(x-xi) / (xi-x) ! from log term
+        ! confirmed
     end function im_CG1_dvcs_sub
 
     function im_CG1_dvcs_cst(xi) result(w)
@@ -233,80 +242,70 @@ module wilson_dvcs
         real(dp), intent(in) :: xi
         real(dp) :: w
         !
-        w = 2.*pi * TF/xi * log(0.5*(1.-xi)/xi)
-        w = w - TF/xi * 4.*pi
+        w = 2.*pi * TF/xi * log(0.5*(1.-xi)/xi) ! from log term
+        w = w - TF/xi * 4.*pi ! from log term
+        ! confirmed
     end function im_CG1_dvcs_cst
 
     ! Axial type ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    ! TODO: obtain the correct formulas
-
     function re_CtilG1_dvcs_reg(x,xi) result(w)
-        ! TODO
         ! Does not yet contain factor sum(eq**2)
         real(dp), intent(in) :: x, xi
         real(dp) :: w
-        real(dp) :: z, zbar
         !
-        zbar = 0.5*(x+xi)/xi
-        z = 0.5*(xi-x)/xi
-        w = TF*( 4.*z*abslog(zbar) - 2.*log2(zbar) ) / (xi-x)**2
+        w = -2.*TF/xi*abslog(0.5*(xi-x)/xi) / (xi+x) ! from log term
+        w = w - 2*TF*log2(0.5*(xi-x)/xi) / (xi+x)**2 ! from log2 term
     end function re_CtilG1_dvcs_reg
 
     function re_CtilG1_dvcs_sub(x,xi) result(w)
-        ! TODO
         ! Does not yet contain factor sum(eq**2)
         real(dp), intent(in) :: x, xi
         real(dp) :: w
         !
-        w = TF * 2./xi*abslog(0.5*(xi-x)/xi) / (xi-x)
-        w = w + TF * 8.*abslog(0.5*(xi+x)/xi) / (xi-x)**2
+        w = -TF * 2./xi*abslog(0.5*(xi-x)/xi) / (xi-x) ! from log term
+        w = w + TF * 8.*abslog(0.5*(xi+x)/xi) / (xi-x)**2 ! from log term
+        ! confirmed
     end function re_CtilG1_dvcs_sub
 
     function re_CtilG1_dvcs_cst(xi) result(w)
-        ! TODO
         ! Does not yet contain factor sum(eq**2)
         real(dp), intent(in) :: xi
         real(dp) :: w
         !
-        w = TF/xi * ( log2(0.5*(1.+xi)/xi) - log2(0.5*(1.-xi)/xi) + pi**2 )
-        w = w + TF/xi * 4. * ( log(0.5*(1.-xi)/xi)/(1.+xi) - log(0.5*(1.+xi)/xi)/(1.-xi) )
+        w = -TF/xi * ( log2(0.5*(1.+xi)/xi) - log2(0.5*(1.-xi)/xi) + pi**2 ) ! from log term
+        w = w - TF/xi * 8. * ( log(0.5*(1.-xi)/xi)/(1.+xi) - log(0.5*(1.+xi)/xi)/(1.-xi) ) ! from log term
     end function re_CtilG1_dvcs_cst
 
     function im_CtilG1_dvcs_reg(x,xi) result(w)
-        ! TODO
         ! Does not yet contain factor sum(eq**2)
         real(dp), intent(in) :: x, xi
         real(dp) :: w
-        real(dp) :: z, zbar
         !
         w = 0.
         if(x > xi) then
-          z = 0.5*(xi-x)/xi
-          zbar = 0.5*(xi+x)/xi
-          w = - pi * TF*( 4.*zbar + 8. - 4.*abslog(z) ) / (xi+x)**2
+          w = w + 4.*pi * TF / (xi+x)**2 * abslog(0.5*(xi-x)/xi) ! from log2 term
+          w = w + 2.*pi * TF / xi / (xi+x) ! from log term
+          w = w - 8.*pi * TF / (xi+x)**2 ! from log term, but extra sign flip for tilde
         endif
     end function im_CtilG1_dvcs_reg
 
     function im_CtilG1_dvcs_sub(x,xi) result(w)
-        ! TODO
         ! Does not yet contain factor sum(eq**2)
         real(dp), intent(in) :: x, xi
         real(dp) :: w
         !
-        w = - TF/xi * 2.*pi * theta_step(x-xi) / (xi-x)
+        w = TF/xi * 2.*pi * theta_step(x-xi) / (xi-x) ! from log term
     end function im_CtilG1_dvcs_sub
 
     function im_CtilG1_dvcs_cst(xi) result(w)
-        ! TODO
         ! Does not yet contain factor sum(eq**2)
         real(dp), intent(in) :: xi
         real(dp) :: w
         !
-        w = 2.*pi * TF/xi * log(0.5*(1.-xi)/xi)
-        w = w - TF/xi * 4.*pi
+        w = -2.*pi * TF/xi * log(0.5*(1.-xi)/xi) ! from log term
+        w = w + TF/xi * 4.*pi ! from log term
     end function im_CtilG1_dvcs_cst
-
 
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! Matrix-building routines
