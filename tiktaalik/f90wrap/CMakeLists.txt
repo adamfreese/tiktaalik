@@ -1,3 +1,9 @@
+include(CheckFortranCompilerFlag)
+check_fortran_compiler_flag("-ftrampoline-impl=heap" can_use_heap)
+if(can_use_heap)
+  set(USE_HEAP "--f90flags='-ftrampoline-impl=heap'")
+endif()
+
 # Function to generate an f2py module and add it to a list of modules to install
 function(gen_f2pymod f2py_module_name module_list)
   set(fortran_src_file "${CMAKE_CURRENT_SOURCE_DIR}/${f2py_module_name}.f90")
@@ -5,7 +11,7 @@ function(gen_f2pymod f2py_module_name module_list)
   # Custom command to execture f2py, since cmake's built-in methods don't seem to work.
   add_custom_command(
     OUTPUT ${generated_module_file}
-    COMMAND ${F2PY_EXECUTABLE} -m ${f2py_module_name} -c --f90flags='-ftrampoline-impl=heap' ${fortran_src_file} -I${CMAKE_BINARY_DIR}/include -L${CMAKE_BINARY_DIR}/lib -ltiktaalik
+    COMMAND ${F2PY_EXECUTABLE} -m ${f2py_module_name} -c ${USE_HEAP} ${fortran_src_file} -I${CMAKE_BINARY_DIR}/include -L${CMAKE_BINARY_DIR}/lib -ltiktaalik
     DEPENDS ${fortran_src_file}
     VERBATIM
   )
