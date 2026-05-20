@@ -88,6 +88,42 @@ module dummy
         !$OMP END PARALLEL DO
     end subroutine Hg_wrap
 
+    subroutine Htu_wrap(nx, nxi, nt, x, xi, t, f)
+        integer,  parameter   :: dp = kind(1d0)
+        integer,  intent(in)  :: nx, nxi, nt
+        real(dp), intent(in)  :: x(nx), xi(nxi), t(nt)
+        real(dp), intent(out) :: f(nx,nxi,nt)
+        !
+        integer :: ix, ixi, it
+        !$OMP PARALLEL DO
+        do ix=1, nx, 1
+        do ixi=1, nxi, 1
+        do it=1, nt, 1
+          f(ix,ixi,it) = Hu_tilde(x(ix), xi(ixi), t(it))
+        end do
+        end do
+        end do
+        !$OMP END PARALLEL DO
+    end subroutine Htu_wrap
+
+    subroutine Htd_wrap(nx, nxi, nt, x, xi, t, f)
+        integer,  parameter   :: dp = kind(1d0)
+        integer,  intent(in)  :: nx, nxi, nt
+        real(dp), intent(in)  :: x(nx), xi(nxi), t(nt)
+        real(dp), intent(out) :: f(nx,nxi,nt)
+        !
+        integer :: ix, ixi, it
+        !$OMP PARALLEL DO
+        do ix=1, nx, 1
+        do ixi=1, nxi, 1
+        do it=1, nt, 1
+          f(ix,ixi,it) = Hd_tilde(x(ix), xi(ixi), t(it))
+        end do
+        end do
+        end do
+        !$OMP END PARALLEL DO
+    end subroutine Htd_wrap
+
     ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     ! Methods allowing a 2D, xi-dependent x grid
 
@@ -163,79 +199,40 @@ module dummy
         !$OMP END PARALLEL DO
     end subroutine Hg_wrap_2d
 
-    ! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    ! Deprecated methods
+    subroutine Htu_wrap_2d(nx, nxi, nt, x, xi, t, f)
+        integer,  parameter   :: dp = kind(1d0)
+        integer,  intent(in)  :: nx, nxi, nt
+        real(dp), intent(in)  :: x(nx,nxi), xi(nxi), t(nt)
+        real(dp), intent(out) :: f(nx,nxi,nt)
+        !
+        integer :: ix, ixi, it
+        !$OMP PARALLEL DO
+        do ix=1, nx, 1
+        do ixi=1, nxi, 1
+        do it=1, nt, 1
+          f(ix,ixi,it) = Hu_tilde(x(ix,ixi), xi(ixi), t(it))
+        end do
+        end do
+        end do
+        !$OMP END PARALLEL DO
+    end subroutine Htu_wrap_2d
 
-    !subroutine Hu_val_wrap(nx, nxi, nt, x, xi, t, f)
-    !    integer,  parameter   :: dp = kind(1d0)
-    !    integer,  intent(in)  :: nx, nxi, nt
-    !    real(dp), intent(in)  :: x(nx), xi(nxi), t(nt)
-    !    real(dp), intent(out) :: f(nx,nxi,nt)
-    !    !
-    !    integer :: ix, ixi, it
-    !    !$OMP PARALLEL DO
-    !    do ix=1, nx, 1
-    !    do ixi=1, nxi, 1
-    !    do it=1, nt, 1
-    !      f(ix,ixi,it) = Hu_val(x(ix), xi(ixi), t(it))
-    !    end do
-    !    end do
-    !    end do
-    !    !$OMP END PARALLEL DO
-    !end subroutine Hu_val_wrap
-
-    !subroutine Hd_val_wrap(nx, nxi, nt, x, xi, t, f)
-    !    integer,  parameter   :: dp = kind(1d0)
-    !    integer,  intent(in)  :: nx, nxi, nt
-    !    real(dp), intent(in)  :: x(nx), xi(nxi), t(nt)
-    !    real(dp), intent(out) :: f(nx,nxi,nt)
-    !    !
-    !    integer :: ix, ixi, it
-    !    !$OMP PARALLEL DO
-    !    do ix=1, nx, 1
-    !    do ixi=1, nxi, 1
-    !    do it=1, nt, 1
-    !      f(ix,ixi,it) = Hd_val(x(ix), xi(ixi), t(it))
-    !    end do
-    !    end do
-    !    end do
-    !    !$OMP END PARALLEL DO
-    !end subroutine Hd_val_wrap
-
-    !subroutine Hu_sea_wrap(nx, nxi, nt, x, xi, t, f)
-    !    integer,  parameter   :: dp = kind(1d0)
-    !    integer,  intent(in)  :: nx, nxi, nt
-    !    real(dp), intent(in)  :: x(nx), xi(nxi), t(nt)
-    !    real(dp), intent(out) :: f(nx,nxi,nt)
-    !    !
-    !    integer :: ix, ixi, it
-    !    !$OMP PARALLEL DO
-    !    do ix=1, nx, 1
-    !    do ixi=1, nxi, 1
-    !    do it=1, nt, 1
-    !      f(ix,ixi,it) = Hu_sea(x(ix), xi(ixi), t(it))
-    !    end do
-    !    end do
-    !    end do
-    !    !$OMP END PARALLEL DO
-    !end subroutine Hu_sea_wrap
-
-    !subroutine Hd_sea_wrap(nx, nxi, nt, x, xi, t, f)
-    !    integer,  parameter   :: dp = kind(1d0)
-    !    integer,  intent(in)  :: nx, nxi, nt
-    !    real(dp), intent(in)  :: x(nx), xi(nxi), t(nt)
-    !    real(dp), intent(out) :: f(nx,nxi,nt)
-    !    !
-    !    integer :: ix, ixi, it
-    !    !$OMP PARALLEL DO
-    !    do ix=1, nx, 1
-    !    do ixi=1, nxi, 1
-    !    do it=1, nt, 1
-    !      f(ix,ixi,it) = Hd_sea(x(ix), xi(ixi), t(it))
-    !    end do
-    !    end do
-    !    end do
-    !    !$OMP END PARALLEL DO
-    !end subroutine Hd_sea_wrap
+    subroutine Htd_wrap_2d(nx, nxi, nt, x, xi, t, f)
+        integer,  parameter   :: dp = kind(1d0)
+        integer,  intent(in)  :: nx, nxi, nt
+        real(dp), intent(in)  :: x(nx,nxi), xi(nxi), t(nt)
+        real(dp), intent(out) :: f(nx,nxi,nt)
+        !
+        integer :: ix, ixi, it
+        !$OMP PARALLEL DO
+        do ix=1, nx, 1
+        do ixi=1, nxi, 1
+        do it=1, nt, 1
+          f(ix,ixi,it) = Hd_tilde(x(ix,ixi), xi(ixi), t(it))
+        end do
+        end do
+        end do
+        !$OMP END PARALLEL DO
+    end subroutine Htd_wrap_2d
 
 end module dummy

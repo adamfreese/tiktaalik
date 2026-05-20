@@ -71,6 +71,32 @@ def Hg(x, xi, t):
         H = f90src.hg_wrap(x,xi,t)
     return H
 
+def Hu_tilde(x, xi, t):
+    if(np.isscalar(x)):
+        x = np.array([x])
+    if(np.isscalar(xi)):
+        xi = np.array([xi])
+    if(np.isscalar(t)):
+        t = np.array([t])
+    if(x.ndim==2):
+        H = f90src.htu_wrap_2d(x,xi,t)
+    else:
+        H = f90src.htu_wrap(x,xi,t)
+    return H
+
+def Hd_tilde(x, xi, t):
+    if(np.isscalar(x)):
+        x = np.array([x])
+    if(np.isscalar(xi)):
+        xi = np.array([xi])
+    if(np.isscalar(t)):
+        t = np.array([t])
+    if(x.ndim==2):
+        H = f90src.htd_wrap_2d(x,xi,t)
+    else:
+        H = f90src.htd_wrap(x,xi,t)
+    return H
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Helpful quark combinations
 

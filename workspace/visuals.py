@@ -157,9 +157,6 @@ def interpixel_demo_alt():
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Visualization of matrix evolution
 
-
-
-
 def evomatrix_demo():
     n_pixels = 29
     xi = 0.5
@@ -313,6 +310,8 @@ def make_nonlo_plots():
     ns_evolution_plots(xi=1e-4, grid_type=2)
     singlet_evolution_plots(xi=0.5, grid_type=1)
     singlet_evolution_plots(xi=1e-4, grid_type=2)
+    tilde_evolution_plots(xi=0.5, grid_type=1)
+    tilde_evolution_plots(xi=1e-4, grid_type=2)
     return
 
 def ns_evolution_plots(xi=1e-3, grid_type=2):
@@ -325,7 +324,7 @@ def ns_evolution_plots(xi=1e-3, grid_type=2):
     tk.matrices.set_Q2_grid(Q2)
     # Model scale GPD
     H0 = tk.model.H3plus(x, xi, 0)[:,0,0]
-    # Retrieve singlet evolution matrices
+    # Retrieve non-singlet evolution matrices
     tk.matrices.do_lo_evolution()
     M1 = tk.matrices.matrix_VNS(ns_type=1)[:,:,0,:]
     tk.matrices.do_nlo_evolution()
@@ -461,6 +460,68 @@ def singlet_evolution_plots(xi=1e-3, grid_type=2):
     # Save
     figQ.savefig('lonlo_q_{:d}.pdf'.format(grid_type))
     figG.savefig('lonlo_g_{:d}.pdf'.format(grid_type))
+    return
+
+def tilde_evolution_plots(xi=1e-3, grid_type=2):
+    # Create x grid
+    nx = 81
+    tk.matrices.set_x_xi_grids(nx, xi, grid_type)
+    x = tk.matrices.get_x_grid()[:,0]
+    # Create Q2 grid
+    Q2 = np.geomspace(4, 17, 11)
+    tk.matrices.set_Q2_grid(Q2)
+    # Model scale GPD
+    H0 = tk.model.Hu_tilde(x, xi, 0)[:,0,0] - tk.model.Hu_tilde(-x, xi, 0)[:,0,0]
+    # Retrieve non-singlet evolution matrices
+    tk.matrices.do_lo_evolution()
+    M1 = tk.matrices.matrix_ANS(ns_type=-1)[:,:,0,:]
+    tk.matrices.do_nlo_evolution()
+    M2 = tk.matrices.matrix_ANS(ns_type=-1)[:,:,0,:]
+    # Get evolved GPDs
+    H1 = np.einsum('xyq,y->xq', M1, H0)[:,-1]
+    H2 = np.einsum('xyq,y->xq', M2, H0)[:,-1]
+    # Plots
+    nrows, ncols = 2, 1
+    figQ, (axQ1, axQ2) = plt.subplots(
+            nrows, ncols,
+            gridspec_kw={'height_ratios': [3,1]},
+            figsize=(8,8),
+            layout = 'constrained'
+            )
+    # Plot the GPD results
+    axQ1.plot(x, H0, 'o', label=r'Initial', color='tab:blue')
+    axQ1.plot(x, H1, 'x', label=r'LO',      color='tab:orange')
+    axQ1.plot(x, H2, '+', label=r'NLO',     color='tab:green')
+    # Plot differences from initial
+    axQ2.plot(x, H0-H0, 'o', color='tab:blue')
+    axQ2.plot(x, H1-H0, 'x', color='tab:orange')
+    axQ2.plot(x, H2-H0, '+', color='tab:green')
+    # Post-processing
+    for ax in [axQ1, axQ2]:
+        _plot_xi_lines(ax, xi)
+        ax.set_xlim((-1,1))
+        ax.plot(x, 0*x, color='tab:gray', linewidth=1)
+        if(grid_type==2):
+            ax.set_xscale('symlog', linthresh=xi)
+    axQ1.set_ylabel(r'$\widetilde{H}_u^-(x,\xi)$')
+    for ax in [axQ2]:
+        ax.set_xlabel(r'$x$')
+        ax.set_ylabel(r'Change')
+        if(grid_type==2):
+            ax.set_xticks(ax.get_xticks()[::2])
+    for ax in [axQ1]:
+        ax.get_xaxis().set_visible(False)
+        legend = ax.legend(prop = { 'size' : 26 })
+        legend.get_frame().set_facecolor('#f8f8f8')
+    for fig in [figQ]:
+        fig.patch.set_alpha(0)
+    bbox = dict(facecolor='#f8f8f8', alpha=0.76, edgecolor='gray', boxstyle='round,pad=0.2')
+    axQ1.annotate(
+            r'\textbf{NS}', xy=(0.03,0.05), xycoords='axes fraction',
+            bbox=bbox
+            )
+    # Save
+    figQ.savefig('lonlo_tilde_{:d}.pdf'.format(grid_type))
     return
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

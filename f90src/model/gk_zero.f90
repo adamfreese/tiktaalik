@@ -40,25 +40,25 @@ module gk_zero
     ! See Eqs. (7) and (16)
 
     function H_n1_zero(x, t, C, delta, ap) result(H)
-        real(dp), intent(in) :: x, t, delta, ap, C(0:3)
+        real(dp), intent(in) :: x, t, delta, ap, C(0:4)
         real(dp) :: H
         !
         integer :: j
         H = 0.0_dp
         if(x <= 0.0_dp) return
-        do j=0, 3, 1
+        do j=0, 4, 1
           H = H + C(j)*sqrt(x)**j
         end do
         H = H * (1.-x)**3 * x**(-delta-ap*t)
     end function H_n1_zero
 
     function H_n2_zero(x, t, C, delta, ap, sgn) result(H)
-        real(dp), intent(in) :: x, t, sgn, delta, ap, C(0:3)
+        real(dp), intent(in) :: x, t, sgn, delta, ap, C(0:4)
         real(dp) :: H
         !
         integer :: j
         H = 0.0_dp
-        do j=0, 3, 1
+        do j=0, 4, 1
           H = H + C(j)*sqrt(abs(x))**j
         end do
         H = H * (1.-abs(x))**5 * abs(x)**(-delta-ap*t)

@@ -42,7 +42,7 @@ module gk_smol
     ! Forms for small skewness
 
     function H_n1_smol(x, xi, t, C, delta, ap) result(H)
-        real(dp), intent(in) :: x, xi, t, delta, ap, C(0:3)
+        real(dp), intent(in) :: x, xi, t, delta, ap, C(0:4)
         real(dp) :: H
         !
         integer :: j
@@ -50,7 +50,7 @@ module gk_smol
     end function H_n1_smol
 
     function H_n2_smol(x, xi, t, C, delta, ap, sgn) result(H)
-        real(dp), intent(in) :: x, xi, t, sgn, delta, ap, C(0:3)
+        real(dp), intent(in) :: x, xi, t, sgn, delta, ap, C(0:4)
         real(dp) :: H
         !
         integer :: j
@@ -64,12 +64,12 @@ module gk_smol
 
     function H_n1_term(x, t, C, delta, ap) result(H)
         ! The order-xi correction
-        real(dp), intent(in) :: x, t, delta, ap, C(0:3)
+        real(dp), intent(in) :: x, t, delta, ap, C(0:4)
         real(dp) :: H
         !
         integer :: j, w
         H = 0.0_dp
-        do j=0, 3, 1
+        do j=0, 4, 1
           do w=0, 3, 1
             H = H - pw(j, w, t, delta, ap)*C(j)*fw(w,1)*abs(x)**(pw(j, w, t, delta, ap)-1.)*(1.-abs(x))
           end do
@@ -85,7 +85,7 @@ module gk_smol
         !
         integer :: j, w
         H = 0.0_dp
-        do j=0, 3, 1
+        do j=0, 4, 1
           do w=0, 5, 1
             H = H - pw(j, w, t, delta, ap)*C(j)*fw(w,2)*abs(x)**(pw(j, w, t, delta, ap)-1.)*(1.-abs(x))
           end do

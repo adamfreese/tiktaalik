@@ -41,7 +41,7 @@ module gk_analytic
     ! Forms for moderate-to-large skewness
 
     function H_n1_analytic(x, xi, t, C, delta, ap) result(H)
-        real(dp), intent(in) :: x, xi, t, delta, ap, C(0:3)
+        real(dp), intent(in) :: x, xi, t, delta, ap, C(0:4)
         real(dp) :: H
         !
         real(dp) :: zi, zf
@@ -56,7 +56,7 @@ module gk_analytic
     end function H_n1_analytic
 
     function H_n2_analytic(x, xi, t, C, delta, ap, sgn) result(H)
-        real(dp), intent(in) :: x, xi, t, sgn, delta, ap, C(0:3)
+        real(dp), intent(in) :: x, xi, t, sgn, delta, ap, C(0:4)
         real(dp) :: H
         !
         real(dp) :: zi, zf, zm, zj
@@ -78,12 +78,12 @@ module gk_analytic
     ! Implementation details
 
     function H_n1_term(x, xi, t, z, C, delta, ap) result(H)
-        real(dp), intent(in) :: x, xi, t, z, delta, ap, C(0:3)
+        real(dp), intent(in) :: x, xi, t, z, delta, ap, C(0:4)
         real(dp) :: H
         !
         integer :: j, w
         H = 0.0_dp
-        do j=0, 3, 1
+        do j=0, 4, 1
           do w=1, 3, 1
             H = H + C(j)*kw(x, xi, w)*z**pw(j, w, t, delta, ap) / pw(j, w, t, delta, ap)
           end do
@@ -92,12 +92,12 @@ module gk_analytic
     end function H_n1_term
 
     function H_n2_term(x, xi, t, z, C, delta, ap) result(H)
-        real(dp), intent(in) :: x, xi, t, z, delta, ap, C(0:3)
+        real(dp), intent(in) :: x, xi, t, z, delta, ap, C(0:4)
         real(dp) :: H
         !
         integer :: j, w
         H = 0.0_dp
-        do j=0, 3, 1
+        do j=0, 4, 1
           do w=1, 5, 1
             H = H + C(j)*ew(x, xi, w)*z**pw(j, w, t, delta, ap) / pw(j, w, t, delta, ap)
           end do
